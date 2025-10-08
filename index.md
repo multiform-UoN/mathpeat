@@ -3,6 +3,9 @@ layout: default
 title: "MathPeat INI Network"
 ---
 
+[Home](/) • [Activities](/activities.md) • [Get Involved](/get-involved.md) • [Resources](/resources.md) • [Blog](/blog/)
+
+
 # MathPeat INI Network
 
 A UK‑based research network dedicated to exploring the mathematics of soft porous materials, with a special focus on peatlands.  
