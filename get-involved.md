@@ -1,7 +1,3 @@
----
-layout: default
-title: "Get Involved"
----
 [Home](index.md) • [Activities](activities.md) • [Get Involved](get-involved.md) • [Resources](resources.md) • [Blog](blog/)
 
 # Get Involved
