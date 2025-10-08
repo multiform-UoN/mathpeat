@@ -2,20 +2,27 @@
 
 ## Links
 
-- Overview of peat and peatlands and their importance for non‑experts  [oai_citation:3‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Groundwater in Peat and Peatlands  [oai_citation:4‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- CoP28 Virtual Peatlands Pavilion  [oai_citation:5‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
+- [Overview of peat and peatlands and their importance for non-experts](https://www.annualreviews.org/doi/abs/10.1146/annurev-environ-110615-085520)
+  
+- [Groundwater in Peat and Peatlands](https://gw-project.org/books/groundwater-in-peat-and-peatlands/)
 
-## Slides and Material / Webinars
+- [CoP28 Virtual Peatlands Pavilion](https://storage.net-fs.com/hosting/6147066/18/)
 
-Some recent webinars & talks:
+## Slides and Material
 
-- Webinar 10th January 2024: MPeat – Adilan Mahdiyasa  [oai_citation:6‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Webinar 21st February 2024: Gas in soft porous media – Chris MacMinn + Intro to Peat – David Large  [oai_citation:7‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Webinar 13th March 2024: Deformation of fluid‑saturated porous media – Duncan Hewitt + Intro to DigiBog – Dylan Young  [oai_citation:8‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Webinar 17th April 2024: Elastic instabilities in growing systems – Giuseppe Zurlo  [oai_citation:9‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Webinar November 2024: Ivan Sudakow  [oai_citation:10‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Webinar December 2024: Ehsan Jorat  [oai_citation:11‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
-- Webinar January 2025: Matteo Camporese  [oai_citation:12‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)  
+- Webinar 10th January 2024: [MPeat – Adilan Mahdiyasa](https://uniofnottm-my.sharepoint.com/:b:/g/personal/matteo_icardi_nottingham_ac_uk/EQrRpFpVXjpPn_6K1rnuhZABxhYNH00B1wV_AveKRH82wg?e=V6Emkb)
 
-If some links are broken or recordings not available, you can request them by contacting us.  [oai_citation:13‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/resources/?utm_source=chatgpt.com)
+- Webinar 21st February 2024: [Gas in soft porous media – Chris MacMinn](https://www.dropbox.com/scl/fi/bs7wx3v72tcnu308sbwpd/slides.pdf?rlkey=ajnku233jawku7eoebgt3spkd&amp;dl=0) + [Intro to Peat – David Large](https://uniofnottm-my.sharepoint.com/:p:/g/personal/matteo_icardi_nottingham_ac_uk/Eb0XjdJsVcZMpEownCNPXsgBKAtz7eQxEDuks89AsKvg7w?e=FhZKSv)
+
+- Webinar 13th March 2024: [Deformation of fluid-saturated porous media – Duncan Hewitt](https://uniofnottm-my.sharepoint.com/:b:/g/personal/matteo_icardi_nottingham_ac_uk/EWpKQy6OoYpOr1Vi7uELeAQBoQq4tP1nth7wVgUegnm7zA?e=Eugid2) + [Intro to DigiBog – Dylan Young](https://uniofnottm-my.sharepoint.com/:b:/g/personal/matteo_icardi_nottingham_ac_uk/EcpcPDRrRIJFnfEq4VZPeXUBx8TM6aEORkKJkwgptOA6lQ?e=wFvOTT)
+
+- Webinar 17th April 2024: [Elastic instabilities in growing systems – Giuseppe Zurlo](https://uniofnottm-my.sharepoint.com/:b:/g/personal/matteo_icardi_nottingham_ac_uk/ETUs0ZPOa2BCngQgzfb3laYBJW-hDxCTRGn18YVVXVRmZQ?e=yDMdZE)
+
+- Webinar November 2024: Ivan Sudakow
+
+- Webinar December 2024: Ehsan Jorat
+
+- Webinar January 2025: Matteo Camporese
+
+---
+If the links are broken or no longer available, you can request them by emailing us.
