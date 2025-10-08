@@ -2,7 +2,7 @@
 body::before {
   content: "";
   display: block;
-  background-image: url("/mathpeat/assets/images/logo.png");
+  background-image: url("/mathpeat/mathpeat.jpg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center top;
