@@ -1,15 +1,11 @@
----
-layout: default
-title: "MathPeat INI Network"
----
-
 <link rel="stylesheet" href="style.css">
 
 > [Home](index.md) • [Activities](activities.md) • [Get Involved](get-involved.md) • [Resources](resources.md) • [Blog](blog/)
+---
 
+# What is MathPeat?
 
-*MathPeat INI Network* is a UK‑based research network dedicated to exploring the mathematics of soft porous materials, with a special focus on peatlands.  
-Supported by a grant from the Isaac Newton Institute and EPSRC (Ref EP/V521929/1).
+*MathPeat INI Network* is a UK‑based research network dedicated to exploring the mathematics of soft porous materials, with a special focus on peatlands.  It is funded by a grant from the Isaac Newton Institute and EPSRC (Ref EP/V521929/1).
 
 ---
 
