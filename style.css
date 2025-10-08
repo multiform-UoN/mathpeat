@@ -27,3 +27,14 @@ body::before {
   background-color: #f8f8f8;
   color: #333;
 }
+
+
+.site-nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 0.5em;
+  font-weight: bold;
+}
+.site-nav a:hover {
+  text-decoration: underline;
+}
