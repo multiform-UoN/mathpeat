@@ -19,3 +19,11 @@ body::before {
 .page-header .btn {
   display: none !important;
 }
+
+.site-footer {
+  text-align: center;
+  padding: 1em;
+  font-size: 0.95em;
+  background-color: #f8f8f8;
+  color: #333;
+}
