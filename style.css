@@ -1,24 +1,20 @@
 /* Add logo at the top of the page */
-body::before {
+/* body::before {
   content: "";
   display: block;
   background-image: url("/mathpeat/mathpeat.jpg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center top;
-  height: 200px;           /* Adjust height as needed */
-  margin-bottom: 0rem;    /* Space between logo and page header */
-}
+  height: 200px;          
+  margin-bottom: 0rem;    
+} */
 
-/* Optional: hide GitHub button */
-.github-button {
-  display: none;
-}
 
 /* Hide the "View on GitHub" button */
-.page-header .btn {
+/* .page-header .btn {
   display: none !important;
-}
+} */
 
 .site-footer {
   text-align: center;
@@ -29,12 +25,78 @@ body::before {
 }
 
 
-.site-nav a {
-  color: white;
-  text-decoration: none;
-  margin: 0 0.5em;
-  font-weight: bold;
+/* --- MathPeat header & nav adjustments --- */
+
+/* Reduce vertical space in the header */
+.page-header {
+  padding-top: 0.6rem;    /* reduce top space */
+  padding-bottom: 0.6rem; /* reduce bottom space */
 }
-.site-nav a:hover {
+
+/* Logo sizing and spacing */
+.page-header img {
+  max-width: 180px;   /* smaller logo */
+  height: auto;
+  display: block;
+  margin: 0 auto 0.6rem;
+}
+
+/* Title / subtitle spacing (tighter) */
+.page-header .project-name {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 3rem;    /* adjust big title size; tweak as needed */
+  line-height: 1.05;
+  color: #ffffff;     /* keep title white on gradient */
+  text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+}
+
+.page-header .project-tagline {
+  margin: 0 0 0.6rem;
+  color: rgba(255,255,255,0.9);
+  font-size: 1.1rem;
+}
+
+/* Make the nav prominent and white */
+.site-nav {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.site-nav p {
+  margin: 0;
+  padding: 0.25rem 0;
+  text-align: center;
+}
+
+/* Nav links: larger and white */
+.site-nav a {
+  color: #ffffff !important;       /* force white */
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.05rem;              /* larger nav text */
+  margin: 0 0.6rem;
+  padding: 0.15rem 0.35rem;
+}
+
+/* subtle hover */
+.site-nav a:hover,
+.site-nav a:focus {
+  color: #e6f7f2 !important;
   text-decoration: underline;
+}
+
+/* If the Cayman header background is dark, ensure contrast for small screens */
+@media (max-width: 640px) {
+  .page-header .project-name {
+    font-size: 2rem;
+  }
+  .site-nav a {
+    display: inline-block;
+    font-size: 0.98rem;
+    margin: 0 0.35rem;
+  }
+  .page-header {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
 }

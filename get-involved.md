@@ -1,8 +1,3 @@
-<link rel="stylesheet" href="style.css">
-
-> [Home](index.md) • [Activities](activities.md) • [Get Involved](get-involved.md) • [Resources](resources.md) • [Blog](blog/)
----
-
 # Get Involved
 
 We invite you to be part of the MathPeat network and engage with our community of researchers interested in the mathematics of soft porous materials.  [oai_citation:1‡MathPeat INI Network](https://mathpeatnetwork.wordpress.com/about-2/?utm_source=chatgpt.com)
