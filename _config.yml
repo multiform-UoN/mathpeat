@@ -13,10 +13,6 @@ relative_links:
 
 include:
   - index.md
-  - activities.md
-  - get-involved.md
-  - resources.md
-  - blog/  # if using folder of md posts
 
 # Optional, only if your theme supports navigation
 navigation:
