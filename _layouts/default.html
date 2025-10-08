@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ page.title }}</title>
+  <link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="{{ '/' | relative_url }}">Home</a></li>
+        <li><a href="{{ '/activities.md' | relative_url }}">Activities</a></li>
+        <li><a href="{{ '/get-involved.md' | relative_url }}">Get Involved</a></li>
+        <li><a href="{{ '/resources.md' | relative_url }}">Resources</a></li>
+        <li><a href="{{ '/blog/' | relative_url }}">Blog</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    {{ content }}
+  </main>
+
+  <footer>
+    <p>© MathPeat INI Network</p>
+    <p>Coordinators: Dr Matteo Icardi, Prof David Large – University of Nottingham</p>
+    <p>Contact: <a href="mailto:mathpeatnetwork@nottingham.ac.uk">mathpeatnetwork@nottingham.ac.uk</a></p>
+  </footer>
+</body>
+</html>
