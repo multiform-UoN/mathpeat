@@ -6,11 +6,16 @@ body::before {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center top;
-  height: 80px;           /* Adjust height as needed */
-  margin-bottom: 1rem;    /* Space between logo and page header */
+  height: 200px;           /* Adjust height as needed */
+  margin-bottom: 0rem;    /* Space between logo and page header */
 }
 
 /* Optional: hide GitHub button */
 .github-button {
   display: none;
+}
+
+/* Hide the "View on GitHub" button */
+.page-header .btn {
+  display: none !important;
 }

@@ -21,6 +21,7 @@ relative_links:
 include:
   - index.md
   - style.css
+  - mathpeat.jpg
 
 # Optional, only if your theme supports navigation
 navigation:
