@@ -1,13 +1,32 @@
 title: MathPeat INI Network
-description: "A research network on the mathematics of peatlands and porous media"
-baseurl: ""     # set if deploying to subpath
-url: "https://yourusername.github.io"  # or your site URL
-theme: minima
-# Optional: to include your CSS overrides
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
+description: A UK research network on soft porous materials
 
-# Include extra files
+theme: jekyll-theme-slate
+
+plugins:
+  - jekyll-relative-links
+  - jekyll-feed
+
+relative_links:
+  enabled: true
+  collections: true
+
 include:
-  - assets/css/style.css
+  - index.md
+  - activities.md
+  - get-involved.md
+  - resources.md
+  - blog/  # if using folder of md posts
+
+# Optional, only if your theme supports navigation
+navigation:
+  - title: Home
+    url: index.md
+  - title: Activities
+    url: activities.md
+  - title: Get Involved
+    url: get-involved.md
+  - title: Resources
+    url: resources.md
+  - title: Blog
+    url: blog/
