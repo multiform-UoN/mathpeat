@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title: "MathPeat Monthly webinars"
 date: 2024-01-10
 ---

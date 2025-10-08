@@ -2,30 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{{ page.title }}</title>
-  <link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
+  <title>{{ page.title }} | {{ site.title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
 </head>
 <body>
+
   <header>
-    <nav>
-      <ul>
-        <li><a href="{{ '/' | relative_url }}">Home</a></li>
-        <li><a href="{{ '/activities.md' | relative_url }}">Activities</a></li>
-        <li><a href="{{ '/get-involved.md' | relative_url }}">Get Involved</a></li>
-        <li><a href="{{ '/resources.md' | relative_url }}">Resources</a></li>
-        <li><a href="{{ '/blog/' | relative_url }}">Blog</a></li>
-      </ul>
-    </nav>
+    <div class="container">
+      <h1><a href="{{ '/' | relative_url }}">{{ site.title }}</a></h1>
+      <p>{{ site.description }}</p>
+      <nav>
+        <ul>
+          <li><a href="{{ '/' | relative_url }}">Home</a></li>
+          <li><a href="{{ '/activities.md' | relative_url }}">Activities</a></li>
+          <li><a href="{{ '/get-involved.md' | relative_url }}">Get Involved</a></li>
+          <li><a href="{{ '/resources.md' | relative_url }}">Resources</a></li>
+          <li><a href="{{ '/blog/' | relative_url }}">Blog</a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main>
+  <main class="container">
     {{ content }}
   </main>
 
   <footer>
-    <p>© MathPeat INI Network</p>
-    <p>Coordinators: Dr Matteo Icardi, Prof David Large – University of Nottingham</p>
-    <p>Contact: <a href="mailto:mathpeatnetwork@nottingham.ac.uk">mathpeatnetwork@nottingham.ac.uk</a></p>
+    <div class="container">
+      <p>© {{ site.time | date: "%Y" }} {{ site.title }}</p>
+      <p>Contact: <a href="mailto:mathpeatnetwork@nottingham.ac.uk">mathpeatnetwork@nottingham.ac.uk</a></p>
+    </div>
   </footer>
+
 </body>
 </html>

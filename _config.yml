@@ -2,6 +2,8 @@ title: MathPeat INI Network
 description: "A research network on the mathematics of peatlands and porous media"
 baseurl: ""     # set if deploying to subpath
 url: "https://yourusername.github.io"  # or your site URL
-theme: minima     # or you can use default + custom layouts
+theme: null
+include:
+  - assets/css/style.css
 plugins:
   - jekyll-feed
