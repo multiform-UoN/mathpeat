@@ -13,6 +13,7 @@ relative_links:
 
 include:
   - index.md
+  - style.css
 
 # Optional, only if your theme supports navigation
 navigation:

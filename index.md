@@ -3,6 +3,8 @@ layout: default
 title: "MathPeat INI Network"
 ---
 
+<link rel="stylesheet" href="assets/css/style.css">
+
 > [Home](index.md) • [Activities](activities.md) • [Get Involved](get-involved.md) • [Resources](resources.md) • [Blog](blog/)
 
 
