@@ -3,6 +3,13 @@ description: A UK research network on soft porous materials
 
 theme: jekyll-theme-cayman
 
+defaults:
+  - scope:
+      path: ""  # Applies to all files
+    values:
+      layout: default
+      title: MathPeat INI Network
+
 plugins:
   - jekyll-relative-links
   - jekyll-feed

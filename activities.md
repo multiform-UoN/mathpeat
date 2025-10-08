@@ -1,7 +1,5 @@
----
-layout: default
-title: "Activities"
----
+# Activities
+
 [Home](index.md) • [Activities](activities.md) • [Get Involved](get-involved.md) • [Resources](resources.md) • [Blog](blog/)
 
 # Activities
