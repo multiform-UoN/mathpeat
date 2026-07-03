@@ -1,14 +1,16 @@
 ---
 layout: default
-title: "Does peat creep?"
-description: "Interactive mathematical model exploring peat age-depth profiles and peat creep."
+title: "Does peat creep? Canvas version"
+description: "Canvas-only version of the peat age-depth creep model."
 ---
 
-# Does Peat Creep?
+# Does Peat Creep? Canvas Version
 
 Peatlands are dynamic, deformable porous media storing over 30% of global soil carbon. Researchers in the **MATHPEAT Network** are currently investigating the evidence for peat creep, how it should be represented mathematically, and what its consequences may be for peatland age-depth structure and long-term carbon storage.
 
 The model below is deliberately simple. It is not a full landscape-scale creep model: creep mostly redistributes peat locally. Here we ask what a single representative column would look like if unresolved downslope or marginal creep eventually exports material from that column.
+
+This comparison version uses the same equations and controls as the main interactive post, but the plot is drawn directly with the browser's HTML `<canvas>` element rather than Chart.js.
 
 ---
 
@@ -46,8 +48,6 @@ In this demo $H_\mathrm{ref}=3\,\mathrm{m}$ and $L=100\,\mathrm{m}$. These assum
 ## Interactive Age-Depth Profile Model
 
 Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years.
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
   .model-container {
@@ -146,12 +146,16 @@ Adjust the parameters below to compare the classic **decay only** profile agains
   }
 
   .chart-wrapper {
-    position: relative;
     background: #ffffff;
     border: 1px solid #d1d5da;
     border-radius: 6px;
     padding: 1rem;
-    min-height: 420px;
+  }
+
+  #peatCanvas {
+    display: block;
+    width: 100%;
+    height: 420px;
   }
 
   .model-notes {
@@ -169,29 +173,29 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 <div class="model-container">
   <div class="controls-grid">
     <div class="control-card">
-      <label for="sliderA">Accumulation Rate ($A$)</label>
+      <label for="canvasSliderA">Accumulation Rate ($A$)</label>
       <small>Surface peat input flux</small>
       <div class="slider-row">
-        <input type="range" id="sliderA" min="20" max="150" step="5" value="60">
-        <span class="value-badge" id="valA">60 g/m²/yr</span>
+        <input type="range" id="canvasSliderA" min="20" max="150" step="5" value="60">
+        <span class="value-badge" id="canvasValA">60 g/m²/yr</span>
       </div>
     </div>
 
     <div class="control-card">
-      <label for="sliderAlpha">Decay Rate ($\alpha$)</label>
+      <label for="canvasSliderAlpha">Decay Rate ($\alpha$)</label>
       <small>First-order catotelm decay rate</small>
       <div class="slider-row">
-        <input type="range" id="sliderAlpha" min="0.00001" max="0.0005" step="0.00001" value="0.0001">
-        <span class="value-badge" id="valAlpha">1.0e-4 /yr</span>
+        <input type="range" id="canvasSliderAlpha" min="0.00001" max="0.0005" step="0.00001" value="0.0001">
+        <span class="value-badge" id="canvasValAlpha">1.0e-4 /yr</span>
       </div>
     </div>
 
     <div class="control-card">
-      <label for="sliderCreep">Reference Creep Speed ($u_\mathrm{ref}$)</label>
+      <label for="canvasSliderCreep">Reference Creep Speed ($u_\mathrm{ref}$)</label>
       <small>Lateral speed at $H_\mathrm{ref}=3\,\mathrm{m}$, converted internally to export</small>
       <div class="slider-row">
-        <input type="range" id="sliderCreep" min="0" max="2" step="0.02" value="0.5">
-        <span class="value-badge" id="valCreep">0.50 cm/yr</span>
+        <input type="range" id="canvasSliderCreep" min="0" max="2" step="0.02" value="0.5">
+        <span class="value-badge" id="canvasValCreep">0.50 cm/yr</span>
       </div>
     </div>
   </div>
@@ -199,24 +203,24 @@ Adjust the parameters below to compare the classic **decay only** profile agains
   <div class="summary-metrics">
     <div class="metric-card">
       <div class="metric-title">Decay Only at 10,000 yrs</div>
-      <div class="metric-value" id="metricDecayOnly">-</div>
+      <div class="metric-value" id="canvasMetricDecayOnly">-</div>
     </div>
     <div class="metric-card creep-card">
       <div class="metric-title">With Creep at 10,000 yrs</div>
-      <div class="metric-value" id="metricWithCreep">-</div>
+      <div class="metric-value" id="canvasMetricWithCreep">-</div>
     </div>
     <div class="metric-card">
       <div class="metric-title">Depth Reduction</div>
-      <div class="metric-value" id="metricReduction">-</div>
+      <div class="metric-value" id="canvasMetricReduction">-</div>
     </div>
     <div class="metric-card">
       <div class="metric-title">Derived $\beta$</div>
-      <div class="metric-value" id="metricBeta">-</div>
+      <div class="metric-value" id="canvasMetricBeta">-</div>
     </div>
   </div>
 
   <div class="chart-wrapper">
-    <canvas id="peatChart"></canvas>
+    <canvas id="peatCanvas"></canvas>
   </div>
 
   <div class="model-notes">
@@ -231,38 +235,36 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 </div>
 
 <script>
-let chartInstance = null;
-
-const MODEL_CONSTANTS = {
+const CANVAS_MODEL_CONSTANTS = {
   years: 10000,
   steps: 500,
-  bulkDensity: 100,      // kg/m3
-  referenceDepth: 3,     // m
-  exportLength: 100      // m
+  bulkDensity: 100,
+  referenceDepth: 3,
+  exportLength: 100
 };
 
-function readInputs() {
-  const A_g = parseFloat(document.getElementById('sliderA').value);
-  const alpha = parseFloat(document.getElementById('sliderAlpha').value);
-  const uRefCmYr = parseFloat(document.getElementById('sliderCreep').value);
+function readCanvasInputs() {
+  const A_g = parseFloat(document.getElementById('canvasSliderA').value);
+  const alpha = parseFloat(document.getElementById('canvasSliderAlpha').value);
+  const uRefCmYr = parseFloat(document.getElementById('canvasSliderCreep').value);
   const A_kg = A_g / 1000.0;
   const uRefMYr = uRefCmYr / 100.0;
   const beta = uRefMYr / (
-    MODEL_CONSTANTS.exportLength *
-    MODEL_CONSTANTS.referenceDepth *
-    MODEL_CONSTANTS.bulkDensity
+    CANVAS_MODEL_CONSTANTS.exportLength *
+    CANVAS_MODEL_CONSTANTS.referenceDepth *
+    CANVAS_MODEL_CONSTANTS.bulkDensity
   );
 
-  document.getElementById('valA').innerText = `${A_g} g/m²/yr`;
-  document.getElementById('valAlpha').innerText = `${alpha.toExponential(1)} /yr`;
-  document.getElementById('valCreep').innerText = `${uRefCmYr.toFixed(2)} cm/yr`;
+  document.getElementById('canvasValA').innerText = `${A_g} g/m²/yr`;
+  document.getElementById('canvasValAlpha').innerText = `${alpha.toExponential(1)} /yr`;
+  document.getElementById('canvasValCreep').innerText = `${uRefCmYr.toFixed(2)} cm/yr`;
 
-  return { A_kg, alpha, uRefCmYr, beta };
+  return { A_kg, alpha, beta };
 }
 
-function solveODE(params) {
+function solveCanvasODE(params) {
   const { A_kg, alpha, beta } = params;
-  const dt = MODEL_CONSTANTS.years / MODEL_CONSTANTS.steps;
+  const dt = CANVAS_MODEL_CONSTANTS.years / CANVAS_MODEL_CONSTANTS.steps;
   const ages = [];
   const depthDecayOnly = [];
   const depthWithCreep = [];
@@ -270,13 +272,13 @@ function solveODE(params) {
   const massWithCreep = [];
   let M_creep = 0;
 
-  for (let i = 0; i <= MODEL_CONSTANTS.steps; i++) {
+  for (let i = 0; i <= CANVAS_MODEL_CONSTANTS.steps; i++) {
     const age = i * dt;
     ages.push(age);
 
     const M_baseline = (A_kg / alpha) * (1 - Math.exp(-alpha * age));
     massDecayOnly.push(M_baseline);
-    depthDecayOnly.push(M_baseline / MODEL_CONSTANTS.bulkDensity);
+    depthDecayOnly.push(M_baseline / CANVAS_MODEL_CONSTANTS.bulkDensity);
 
     if (i === 0) {
       massWithCreep.push(0);
@@ -290,117 +292,154 @@ function solveODE(params) {
       M_creep += (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4);
       if (M_creep < 0) M_creep = 0;
       massWithCreep.push(M_creep);
-      depthWithCreep.push(M_creep / MODEL_CONSTANTS.bulkDensity);
+      depthWithCreep.push(M_creep / CANVAS_MODEL_CONSTANTS.bulkDensity);
     }
   }
 
   return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep };
 }
 
-function updatePlot() {
-  const params = readInputs();
-  const data = solveODE(params);
+function drawSeries(ctx, data, plot, colour, dashed) {
+  ctx.save();
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = 3;
+  ctx.setLineDash(dashed ? [8, 6] : []);
+  ctx.beginPath();
+  data.ages.forEach((age, index) => {
+    const x = plot.left + plot.width - (age / CANVAS_MODEL_CONSTANTS.years) * plot.width;
+    const y = plot.top + (data.series[index] / plot.maxDepth) * plot.height;
+    if (index === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCanvasPlot(data) {
+  const canvas = document.getElementById('peatCanvas');
+  const wrapper = canvas.parentElement;
+  const ratio = window.devicePixelRatio || 1;
+  const cssWidth = Math.max(wrapper.clientWidth - 32, 320);
+  const cssHeight = 420;
+  canvas.width = cssWidth * ratio;
+  canvas.height = cssHeight * ratio;
+  canvas.style.width = `${cssWidth}px`;
+  canvas.style.height = `${cssHeight}px`;
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const maxDepth = Math.max(...data.depthDecayOnly, ...data.depthWithCreep) * 1.08;
+  const plot = {
+    left: 68,
+    right: 24,
+    top: 32,
+    bottom: 58
+  };
+  plot.width = cssWidth - plot.left - plot.right;
+  plot.height = cssHeight - plot.top - plot.bottom;
+  plot.maxDepth = Math.max(maxDepth, 0.1);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, cssWidth, cssHeight);
+
+  ctx.strokeStyle = '#d8dee4';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#586069';
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+
+  for (let i = 0; i <= 5; i++) {
+    const y = plot.top + (i / 5) * plot.height;
+    const depth = (i / 5) * plot.maxDepth;
+    ctx.beginPath();
+    ctx.moveTo(plot.left, y);
+    ctx.lineTo(plot.left + plot.width, y);
+    ctx.stroke();
+    ctx.fillText(depth.toFixed(1), plot.left - 10, y);
+  }
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  for (let i = 0; i <= 5; i++) {
+    const x = plot.left + (i / 5) * plot.width;
+    const age = (1 - i / 5) * CANVAS_MODEL_CONSTANTS.years;
+    ctx.beginPath();
+    ctx.moveTo(x, plot.top);
+    ctx.lineTo(x, plot.top + plot.height);
+    ctx.stroke();
+    ctx.fillText(Math.round(age).toString(), x, plot.top + plot.height + 10);
+  }
+
+  ctx.strokeStyle = '#24292e';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(plot.left, plot.top);
+  ctx.lineTo(plot.left, plot.top + plot.height);
+  ctx.lineTo(plot.left + plot.width, plot.top + plot.height);
+  ctx.stroke();
+
+  drawSeries(ctx, { ages: data.ages, series: data.depthDecayOnly }, plot, '#157878', false);
+  drawSeries(ctx, { ages: data.ages, series: data.depthWithCreep }, plot, '#d9534f', true);
+
+  ctx.fillStyle = '#24292e';
+  ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('Peat Age-Depth Profile (10,000 Years)', plot.left + plot.width / 2, 22);
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.fillText('Peat age (years, present day at right)', plot.left + plot.width / 2, cssHeight - 18);
+
+  ctx.save();
+  ctx.translate(18, plot.top + plot.height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Estimated cumulative depth (m)', 0, 0);
+  ctx.restore();
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#157878';
+  ctx.fillRect(plot.left + 12, plot.top + 12, 24, 3);
+  ctx.fillStyle = '#24292e';
+  ctx.fillText('Decay only', plot.left + 44, plot.top + 14);
+  ctx.strokeStyle = '#d9534f';
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.moveTo(plot.left + 140, plot.top + 14);
+  ctx.lineTo(plot.left + 164, plot.top + 14);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillText('Decay + creep export', plot.left + 172, plot.top + 14);
+}
+
+function updateCanvasPlot() {
+  const params = readCanvasInputs();
+  const data = solveCanvasODE(params);
   const finalBaselineDepth = data.depthDecayOnly[data.depthDecayOnly.length - 1];
   const finalCreepDepth = data.depthWithCreep[data.depthWithCreep.length - 1];
   const finalBaselineMass = data.massDecayOnly[data.massDecayOnly.length - 1];
   const finalCreepMass = data.massWithCreep[data.massWithCreep.length - 1];
   const diffPct = ((finalBaselineDepth - finalCreepDepth) / finalBaselineDepth) * 100;
 
-  document.getElementById('metricDecayOnly').innerText = `${finalBaselineDepth.toFixed(2)} m (${finalBaselineMass.toFixed(0)} kg/m²)`;
-  document.getElementById('metricWithCreep').innerText = `${finalCreepDepth.toFixed(2)} m (${finalCreepMass.toFixed(0)} kg/m²)`;
-  document.getElementById('metricReduction').innerText = `${diffPct.toFixed(1)}%`;
-  document.getElementById('metricBeta').innerText = `${params.beta.toExponential(2)} m²/kg/yr`;
-
-  const ctx = document.getElementById('peatChart').getContext('2d');
-
-  if (chartInstance) {
-    chartInstance.data.labels = data.ages;
-    chartInstance.data.datasets[0].data = data.depthDecayOnly;
-    chartInstance.data.datasets[1].data = data.depthWithCreep;
-    chartInstance.update();
-  } else {
-    chartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: data.ages,
-        datasets: [
-          {
-            label: 'Decay only',
-            data: data.depthDecayOnly,
-            borderColor: '#157878',
-            backgroundColor: 'rgba(21, 120, 120, 0.1)',
-            borderWidth: 3,
-            fill: false,
-            tension: 0.2,
-            pointRadius: 0,
-            pointHoverRadius: 5
-          },
-          {
-            label: 'Decay + creep export',
-            data: data.depthWithCreep,
-            borderColor: '#d9534f',
-            backgroundColor: 'rgba(217, 83, 79, 0.1)',
-            borderDash: [6, 4],
-            borderWidth: 3,
-            fill: false,
-            tension: 0.2,
-            pointRadius: 0,
-            pointHoverRadius: 5
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        plugins: {
-          title: {
-            display: true,
-            text: 'Peat Age-Depth Profile (10,000 Years)',
-            font: { size: 16, weight: 'bold' }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return `${context.dataset.label}: ${context.raw.toFixed(2)} m depth`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            reverse: true,
-            title: {
-              display: true,
-              text: 'Peat age (years, present day at right)',
-              font: { weight: 'bold' }
-            },
-            grid: { color: '#eaeaea' }
-          },
-          y: {
-            reverse: true,
-            title: {
-              display: true,
-              text: 'Estimated cumulative depth (m)',
-              font: { weight: 'bold' }
-            },
-            grid: { color: '#eaeaea' }
-          }
-        }
-      }
-    });
-  }
+  document.getElementById('canvasMetricDecayOnly').innerText = `${finalBaselineDepth.toFixed(2)} m (${finalBaselineMass.toFixed(0)} kg/m²)`;
+  document.getElementById('canvasMetricWithCreep').innerText = `${finalCreepDepth.toFixed(2)} m (${finalCreepMass.toFixed(0)} kg/m²)`;
+  document.getElementById('canvasMetricReduction').innerText = `${diffPct.toFixed(1)}%`;
+  document.getElementById('canvasMetricBeta').innerText = `${params.beta.toExponential(2)} m²/kg/yr`;
+  drawCanvasPlot(data);
 
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  ['sliderA', 'sliderAlpha', 'sliderCreep'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updatePlot);
+  ['canvasSliderA', 'canvasSliderAlpha', 'canvasSliderCreep'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateCanvasPlot);
   });
-  updatePlot();
+  window.addEventListener('resize', updateCanvasPlot);
+  updateCanvasPlot();
 });
 </script>
 

@@ -7,7 +7,10 @@ Welcome to the MATHPEAT Network blog! Here you will find workshop reports, annou
 ### Latest Posts & Demos
 
 - **[Does Peat Creep?](./does-peat-creep.md)**  
-  *Interactive mathematical model exploring peat age-depth profiles under linear decay and non-linear creep advection.*
+  *Interactive Chart.js model exploring peat age-depth profiles under linear decay and simple depth-dependent creep export.*
+
+- **[Does Peat Creep? Canvas Version](./does-peat-creep-canvas.md)**
+  *The same peat age-depth model drawn directly with HTML canvas, for comparison.*
 
 - **[Dundee Knowledge Exchange Workshop (September 2025)](./2025-09-dundee-ke-workshop.md)**  
   *Key outcomes and discussions from our three-day knowledge exchange workshop with industry and academic partners in Dundee.*

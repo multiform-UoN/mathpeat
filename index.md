@@ -36,7 +36,8 @@ MathPeat aims to bridge this gap by developing mathematical models and simulatio
 
 ## Recent Posts & Events
 
-- [Does peat creep? – Interactive Model](./blog/does-peat-creep.md)
+- [Does peat creep? - Interactive Model](./blog/does-peat-creep.md)
+- [Does peat creep? - Canvas Version](./blog/does-peat-creep-canvas.md)
 - [Dundee KE workshop - September 2025](./blog/2025-09-dundee-ke-workshop.md)
 - [Kick-off workshop – May 2024](./blog/2024-05-kick-off-workshop.md)
 - [MathPeat Monthly webinars](./blog/mathpeat-monthly-webinars.md)
@@ -49,4 +50,4 @@ MathPeat aims to bridge this gap by developing mathematical models and simulatio
 
 **Coordinators**: Dr. Matteo Icardi, Prof. David Large – University of Nottingham  
 
-**Contact us**: mathpeatnetwork@nottingham.ac.uk  
+**Contact us**: mathpeatnetwork@nottingham.ac.uk
