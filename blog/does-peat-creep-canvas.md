@@ -250,7 +250,7 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
         <select id="canvasSelectModel">
           <option value="overburden" selected>1. Overburden Creep (u ∝ H, max at depth)</option>
           <option value="shear">2. Surface Shear (max at surface, 0 at bed)</option>
-          <option value="activeLayer">3. Active Upper Layer (max in top 1.5m, 0 deep)</option>
+          <option value="activeLayer">3. Active Upper Layer (max at surface, 0 at 1m deep)</option>
         </select>
       </div>
 
@@ -351,9 +351,9 @@ function readCanvasInputs() {
     document.getElementById('canvasSublabelCreep').innerText = 'Speed at surface (0 at bed)';
     document.getElementById('canvasTitleCoeff').innerText = 'Derived γ';
   } else if (modelType === 'activeLayer') {
-    document.getElementById('canvasModelHelpText').innerText = 'u constant in top 1.5m, 0 in deep peat';
-    document.getElementById('canvasLabelCreep').innerText = 'Active Speed (u_active)';
-    document.getElementById('canvasSublabelCreep').innerText = 'Speed in top 1.5 m active layer';
+    document.getElementById('canvasModelHelpText').innerText = 'u max at surface, linear down to 0 at 1m (0 deep)';
+    document.getElementById('canvasLabelCreep').innerText = 'Surface Speed (u_surf)';
+    document.getElementById('canvasSublabelCreep').innerText = 'Speed at surface (0 at 1 m depth)';
     document.getElementById('canvasTitleCoeff').innerText = 'Derived k_act';
   }
 
@@ -381,7 +381,7 @@ function solveCanvasODE(params) {
   const beta = uRefMYr / (CANVAS_MODEL_CONSTANTS.exportLength * CANVAS_MODEL_CONSTANTS.referenceDepth * CANVAS_MODEL_CONSTANTS.bulkDensity);
   const gamma = uRefMYr / CANVAS_MODEL_CONSTANTS.exportLength;
   const k_act = uRefMYr / CANVAS_MODEL_CONSTANTS.exportLength;
-  const M_act = 1.5 * CANVAS_MODEL_CONSTANTS.bulkDensity;
+  const M_act = 1.0 * CANVAS_MODEL_CONSTANTS.bulkDensity; // 100 kg/m2 (1m depth)
 
   for (let i = 0; i <= CANVAS_MODEL_CONSTANTS.steps; i++) {
     const age = i * dt;
@@ -403,7 +403,8 @@ function solveCanvasODE(params) {
           const factor = Math.max(0, 1 - m / M_bed);
           return A_kg_creep - alpha_creep * m - gamma * m * factor;
         } else if (modelType === 'activeLayer') {
-          return A_kg_creep - alpha_creep * m - k_act * Math.min(m, M_act);
+          const factor = Math.max(0, 1 - m / M_act);
+          return A_kg_creep - alpha_creep * m - k_act * m * factor;
         }
       };
 
@@ -597,10 +598,10 @@ In a 2D/3D continuum, mass conservation is $\frac{\partial M}{\partial t} + \nab
 - **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \gamma M(a) \left(1 - \frac{M(a)}{M_{\text{tot}}}\right)$, where $\gamma = \frac{u_{\text{surf}}}{L}$.
 - Deep peat near bedrock stops creeping, resuming pure decay kinetics!
 
-#### **Model 3: Active Upper Layer Creep ($u_0$ in top $1.5\,\mathrm{m}$, $0$ deep)**
-- Creep occurs at constant speed $u_0$ only in the upper active layer ($H \le 1.5\,\mathrm{m}$, $M \le M_{\text{active}} = 150\text{ kg m}^{-2}$).
-- **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} \min(M, M_{\text{active}})$, where $k_{\text{active}} = \frac{u_0}{L}$.
-- Peat buried below $1.5\,\mathrm{m}$ stops creeping, preserving its profile shape.
+#### **Model 3: Active Upper Layer Creep ($u_{\text{surf}}$ at top, $0$ at $1\,\mathrm{m}$ deep)**
+- Creep velocity decreases linearly from $u_{\text{surf}}$ at top surface ($0\,\mathrm{m}$) to $0$ at depth $H_{\text{active}} = 1.0\,\mathrm{m}$ ($M_{\text{active}} = 100\text{ kg m}^{-2}$).
+- **ODE:** For $M \le M_{\text{active}}$, $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} M(a) \left(1 - \frac{M(a)}{M_{\text{active}}}\right)$, where $k_{\text{active}} = \frac{u_{\text{surf}}}{L}$. Below $1.0\,\mathrm{m}$, creep velocity is $0$.
+- Peat buried below $1.0\,\mathrm{m}$ stops creeping, preserving its profile shape.
 
 ---
 

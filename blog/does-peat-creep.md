@@ -22,8 +22,6 @@ In field peatland science, scientists extract a physical peat core, measure its 
 
 If creep is ignored, fitting an observed profile with only Clymo's equation will **underestimate true carbon accumulation rates ($A$)** and misattribute lateral creep loss to decomposition!
 
-Try adjusting the separate parameters below to see if you can "fit" the Clymo model to match the Creep model's final depth!
-
 ---
 
 ## Interactive Age-Depth & Cumulative Mass Model
@@ -248,7 +246,7 @@ Try adjusting the separate parameters below to see if you can "fit" the Clymo mo
         <select id="selectModel">
           <option value="overburden" selected>1. Overburden Creep (u ∝ H, max at depth)</option>
           <option value="shear">2. Surface Shear (max at surface, 0 at bed)</option>
-          <option value="activeLayer">3. Active Upper Layer (max in top 1.5m, 0 deep)</option>
+          <option value="activeLayer">3. Active Upper Layer (max at surface, 0 at 1m deep)</option>
         </select>
       </div>
 
@@ -359,9 +357,9 @@ function readInputs() {
     document.getElementById('sublabelCreep').innerText = 'Speed at surface (0 at bed)';
     document.getElementById('titleCoeff').innerText = 'Derived γ';
   } else if (modelType === 'activeLayer') {
-    document.getElementById('modelHelpText').innerText = 'u constant in top 1.5m, 0 in deep peat';
-    document.getElementById('labelCreep').innerText = 'Active Speed (u_active)';
-    document.getElementById('sublabelCreep').innerText = 'Speed in top 1.5 m active layer';
+    document.getElementById('modelHelpText').innerText = 'u max at surface, linear down to 0 at 1m (0 deep)';
+    document.getElementById('labelCreep').innerText = 'Surface Speed (u_surf)';
+    document.getElementById('sublabelCreep').innerText = 'Speed at surface (0 at 1 m depth)';
     document.getElementById('titleCoeff').innerText = 'Derived k_act';
   }
 
@@ -390,7 +388,7 @@ function solveODE(params) {
   const beta = uRefMYr / (MODEL_CONSTANTS.exportLength * MODEL_CONSTANTS.referenceDepth * MODEL_CONSTANTS.bulkDensity);
   const gamma = uRefMYr / MODEL_CONSTANTS.exportLength;
   const k_act = uRefMYr / MODEL_CONSTANTS.exportLength;
-  const M_act = 1.5 * MODEL_CONSTANTS.bulkDensity;
+  const M_act = 1.0 * MODEL_CONSTANTS.bulkDensity; // 100 kg/m2 (1m depth)
 
   for (let i = 0; i <= MODEL_CONSTANTS.steps; i++) {
     const age = i * dt;
@@ -414,7 +412,9 @@ function solveODE(params) {
           const factor = Math.max(0, 1 - m / M_bed);
           return A_kg_creep - alpha_creep * m - gamma * m * factor;
         } else if (modelType === 'activeLayer') {
-          return A_kg_creep - alpha_creep * m - k_act * Math.min(m, M_act);
+          // Model 3: Active top 1m layer, linear down to 0 at 1m (0 below 1m)
+          const factor = Math.max(0, 1 - m / M_act);
+          return A_kg_creep - alpha_creep * m - k_act * m * factor;
         }
       };
 
@@ -591,10 +591,10 @@ In a 2D/3D continuum, mass conservation is $\frac{\partial M}{\partial t} + \nab
 - **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \gamma M(a) \left(1 - \frac{M(a)}{M_{\text{tot}}}\right)$, where $\gamma = \frac{u_{\text{surf}}}{L}$.
 - Deep peat near bedrock stops creeping, resuming pure decay kinetics!
 
-#### **Model 3: Active Upper Layer Creep ($u_0$ in top $1.5\,\mathrm{m}$, $0$ deep)**
-- Creep occurs at constant speed $u_0$ only in the upper active layer ($H \le 1.5\,\mathrm{m}$, $M \le M_{\text{active}} = 150\text{ kg m}^{-2}$).
-- **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} \min(M, M_{\text{active}})$, where $k_{\text{active}} = \frac{u_0}{L}$.
-- Peat buried below $1.5\,\mathrm{m}$ stops creeping, preserving its profile shape.
+#### **Model 3: Active Upper Layer Creep ($u_{\text{surf}}$ at top, $0$ at $1\,\mathrm{m}$ deep)**
+- Creep velocity decreases linearly from $u_{\text{surf}}$ at top surface ($0\,\mathrm{m}$) to $0$ at depth $H_{\text{active}} = 1.0\,\mathrm{m}$ ($M_{\text{active}} = 100\text{ kg m}^{-2}$).
+- **ODE:** For $M \le M_{\text{active}}$, $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} M(a) \left(1 - \frac{M(a)}{M_{\text{active}}}\right)$, where $k_{\text{active}} = \frac{u_{\text{surf}}}{L}$. Below $1.0\,\mathrm{m}$, creep velocity is $0$.
+- Peat buried below $1.0\,\mathrm{m}$ stops creeping, preserving its profile shape.
 
 ---
 
