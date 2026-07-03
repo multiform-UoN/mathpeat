@@ -36,16 +36,15 @@ $$\frac{dM}{da} = A - \alpha M - \beta(u_\mathrm{ref}) M^2,$$
 
 with
 
-$$\beta(u_\mathrm{ref}) =
-\frac{u_\mathrm{ref}}{L H_\mathrm{ref} \rho_b}.$$
+$$\beta(u_\mathrm{ref}) = \frac{u_\mathrm{ref}}{L H_\mathrm{ref} \rho_b}.$$
 
 In this demo $H_\mathrm{ref}=3\,\mathrm{m}$ and $L=100\,\mathrm{m}$. These assumptions keep the control physically readable while preserving the intended simple nonlinear loss term.
 
 ---
 
-## Interactive Age-Depth Profile Model
+## Interactive Age-Depth & Cumulative Mass Model
 
-Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years.
+Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years. Both the **Estimated Depth Profile** (in meters) and the **Cumulative Dry Mass Profile** ($\mathrm{kg\,m^{-2}}$) are displayed below.
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -146,13 +145,19 @@ Adjust the parameters below to compare the classic **decay only** profile agains
     margin-top: 0.25rem;
   }
 
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
   .chart-wrapper {
     position: relative;
     background: #ffffff;
     border: 1px solid #d1d5da;
     border-radius: 6px;
     padding: 1rem;
-    min-height: 420px;
+    min-height: 400px;
   }
 
   .model-notes {
@@ -207,7 +212,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
       <div class="metric-value" id="metricWithCreep">-</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Depth Reduction</div>
+      <div class="metric-title">Reduction</div>
       <div class="metric-value" id="metricReduction">-</div>
     </div>
     <div class="metric-card">
@@ -216,23 +221,35 @@ Adjust the parameters below to compare the classic **decay only** profile agains
     </div>
   </div>
 
-  <div class="chart-wrapper">
-    <canvas id="peatChart"></canvas>
+  <div class="charts-grid">
+    <div class="chart-wrapper">
+      <h4 style="margin-top:0; margin-bottom: 0.5rem; color:#157878; text-align:center;">Estimated Depth Profile ($H$, meters)</h4>
+      <div style="position: relative; height: 350px;">
+        <canvas id="peatDepthChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <h4 style="margin-top:0; margin-bottom: 0.5rem; color:#157878; text-align:center;">Cumulative Dry Mass Profile ($M$, kg/m²)</h4>
+      <div style="position: relative; height: 350px;">
+        <canvas id="peatMassChart"></canvas>
+      </div>
+    </div>
   </div>
 
   <div class="model-notes">
-    <strong>How to read the plot:</strong>
+    <strong>How to read the plots:</strong>
     <ul>
       <li><strong>X-axis:</strong> peat cohort age, reversed so present day is at the right and older peat extends leftward.</li>
-      <li><strong>Y-axis:</strong> estimated cumulative peat depth, inverted so the surface is at the top.</li>
-      <li><strong>Solid teal line:</strong> accumulation plus first-order decay.</li>
-      <li><strong>Dashed red line:</strong> the same model with a simple depth-dependent creep export term.</li>
+      <li><strong>Y-axes:</strong> inverted so surface ($0$) is at the top. Left plot shows Depth ($H$, m); right plot shows Cumulative Mass ($M$, $\mathrm{kg\,m^{-2}}$).</li>
+      <li><strong>Solid teal line:</strong> classic Clymo model (decay only).</li>
+      <li><strong>Dashed red line:</strong> model with depth-dependent creep export term.</li>
     </ul>
   </div>
 </div>
 
 <script>
-let chartInstance = null;
+let depthChartInstance = null;
+let massChartInstance = null;
 
 const MODEL_CONSTANTS = {
   years: 10000,
@@ -298,36 +315,24 @@ function solveODE(params) {
   return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep };
 }
 
-function updatePlot() {
-  const params = readInputs();
-  const data = solveODE(params);
-  const finalBaselineDepth = data.depthDecayOnly[data.depthDecayOnly.length - 1];
-  const finalCreepDepth = data.depthWithCreep[data.depthWithCreep.length - 1];
-  const finalBaselineMass = data.massDecayOnly[data.massDecayOnly.length - 1];
-  const finalCreepMass = data.massWithCreep[data.massWithCreep.length - 1];
-  const diffPct = ((finalBaselineDepth - finalCreepDepth) / finalBaselineDepth) * 100;
-
-  document.getElementById('metricDecayOnly').innerText = `${finalBaselineDepth.toFixed(2)} m (${finalBaselineMass.toFixed(0)} kg/m²)`;
-  document.getElementById('metricWithCreep').innerText = `${finalCreepDepth.toFixed(2)} m (${finalCreepMass.toFixed(0)} kg/m²)`;
-  document.getElementById('metricReduction').innerText = `${diffPct.toFixed(1)}%`;
-  document.getElementById('metricBeta').innerText = `${params.beta.toExponential(2)} m²/kg/yr`;
-
-  const ctx = document.getElementById('peatChart').getContext('2d');
-
-  if (chartInstance) {
-    chartInstance.data.labels = data.ages;
-    chartInstance.data.datasets[0].data = data.depthDecayOnly;
-    chartInstance.data.datasets[1].data = data.depthWithCreep;
-    chartInstance.update();
+function createOrUpdateChart(existingChart, canvasId, titleText, yAxisLabel, labels, dataBaseline, dataCreep, unitFormatter) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  
+  if (existingChart) {
+    existingChart.data.labels = labels;
+    existingChart.data.datasets[0].data = dataBaseline;
+    existingChart.data.datasets[1].data = dataCreep;
+    existingChart.update();
+    return existingChart;
   } else {
-    chartInstance = new Chart(ctx, {
+    return new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.ages,
+        labels: labels,
         datasets: [
           {
             label: 'Decay only',
-            data: data.depthDecayOnly,
+            data: dataBaseline,
             borderColor: '#157878',
             backgroundColor: 'rgba(21, 120, 120, 0.1)',
             borderWidth: 3,
@@ -338,7 +343,7 @@ function updatePlot() {
           },
           {
             label: 'Decay + creep export',
-            data: data.depthWithCreep,
+            data: dataCreep,
             borderColor: '#d9534f',
             backgroundColor: 'rgba(217, 83, 79, 0.1)',
             borderDash: [6, 4],
@@ -359,14 +364,12 @@ function updatePlot() {
         },
         plugins: {
           title: {
-            display: true,
-            text: 'Peat Age-Depth Profile (10,000 Years)',
-            font: { size: 16, weight: 'bold' }
+            display: false
           },
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `${context.dataset.label}: ${context.raw.toFixed(2)} m depth`;
+                return `${context.dataset.label}: ${unitFormatter(context.raw)}`;
               }
             }
           }
@@ -376,7 +379,7 @@ function updatePlot() {
             reverse: true,
             title: {
               display: true,
-              text: 'Peat age (years, present day at right)',
+              text: 'Peat age (years)',
               font: { weight: 'bold' }
             },
             grid: { color: '#eaeaea' }
@@ -385,7 +388,7 @@ function updatePlot() {
             reverse: true,
             title: {
               display: true,
-              text: 'Estimated cumulative depth (m)',
+              text: yAxisLabel,
               font: { weight: 'bold' }
             },
             grid: { color: '#eaeaea' }
@@ -394,7 +397,43 @@ function updatePlot() {
       }
     });
   }
+}
 
+function updatePlot() {
+  const params = readInputs();
+  const data = solveODE(params);
+  const finalBaselineDepth = data.depthDecayOnly[data.depthDecayOnly.length - 1];
+  const finalCreepDepth = data.depthWithCreep[data.depthWithCreep.length - 1];
+  const finalBaselineMass = data.massDecayOnly[data.massDecayOnly.length - 1];
+  const finalCreepMass = data.massWithCreep[data.massWithCreep.length - 1];
+  const diffPct = ((finalBaselineDepth - finalCreepDepth) / finalBaselineDepth) * 100;
+
+  document.getElementById('metricDecayOnly').innerText = `${finalBaselineDepth.toFixed(2)} m (${finalBaselineMass.toFixed(0)} kg/m²)`;
+  document.getElementById('metricWithCreep').innerText = `${finalCreepDepth.toFixed(2)} m (${finalCreepMass.toFixed(0)} kg/m²)`;
+  document.getElementById('metricReduction').innerText = `${diffPct.toFixed(1)}%`;
+  document.getElementById('metricBeta').innerText = `${params.beta.toExponential(2)} m²/kg/yr`;
+
+  depthChartInstance = createOrUpdateChart(
+    depthChartInstance,
+    'peatDepthChart',
+    'Estimated Depth Profile',
+    'Estimated depth (m)',
+    data.ages,
+    data.depthDecayOnly,
+    data.depthWithCreep,
+    (val) => `${val.toFixed(2)} m depth`
+  );
+
+  massChartInstance = createOrUpdateChart(
+    massChartInstance,
+    'peatMassChart',
+    'Cumulative Dry Mass Profile',
+    'Cumulative mass (kg/m²)',
+    data.ages,
+    data.massDecayOnly,
+    data.massWithCreep,
+    (val) => `${val.toFixed(0)} kg/m²`
+  );
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -438,4 +477,3 @@ $$\frac{dM(a)}{da} = A - \alpha M(a) - \beta M(a)^2, \quad M(0) = 0$$
 - **Asymptotic Thickness & Carbon Storage**: While the classic Clymo model reaches a maximum mass $M_{\infty} = A / \alpha$, the creep ODE caps the sustainable column mass at a lower positive fixed point $M^*$:
   $$M^* = \frac{-\alpha + \sqrt{\alpha^2 + 4 A \beta}}{2 \beta}$$
 - **Numerical Integration**: The profile $M(a)$ across $a \in [0, 10000\text{ yr}]$ is computed numerically using a 4th-order Runge-Kutta (RK4) integration scheme with $\Delta a = 20\text{ years}$.
-

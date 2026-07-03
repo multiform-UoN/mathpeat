@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Does peat creep? Canvas version"
-description: "Canvas-only version of the peat age-depth creep model."
+description: "Canvas-only version of the peat age-depth creep model displaying both depth and mass profiles."
 ---
 
 # Does Peat Creep? Canvas Version
@@ -10,7 +10,7 @@ Peatlands are dynamic, deformable porous media storing over 30% of global soil c
 
 The model below is deliberately simple. It is not a full landscape-scale creep model: creep mostly redistributes peat locally. Here we ask what a single representative column would look like if unresolved downslope or marginal creep eventually exports material from that column.
 
-This comparison version uses the same equations and controls as the main interactive post, but the plot is drawn directly with the browser's HTML `<canvas>` element rather than Chart.js.
+This comparison version uses the same equations and controls as the main interactive post, but the plots are drawn directly with the browser's HTML `<canvas>` element rather than Chart.js.
 
 ---
 
@@ -38,16 +38,15 @@ $$\frac{dM}{da} = A - \alpha M - \beta(u_\mathrm{ref}) M^2,$$
 
 with
 
-$$\beta(u_\mathrm{ref}) =
-\frac{u_\mathrm{ref}}{L H_\mathrm{ref} \rho_b}.$$
+$$\beta(u_\mathrm{ref}) = \frac{u_\mathrm{ref}}{L H_\mathrm{ref} \rho_b}.$$
 
 In this demo $H_\mathrm{ref}=3\,\mathrm{m}$ and $L=100\,\mathrm{m}$. These assumptions keep the control physically readable while preserving the intended simple nonlinear loss term.
 
 ---
 
-## Interactive Age-Depth Profile Model
+## Interactive Age-Depth & Cumulative Mass Model
 
-Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years.
+Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years. Both the **Estimated Depth Profile** (meters) and the **Cumulative Dry Mass Profile** ($\mathrm{kg\,m^{-2}}$) are rendered directly using Canvas below.
 
 {% raw %}
 <style>
@@ -146,6 +145,12 @@ Adjust the parameters below to compare the classic **decay only** profile agains
     margin-top: 0.25rem;
   }
 
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
   .chart-wrapper {
     background: #ffffff;
     border: 1px solid #d1d5da;
@@ -153,10 +158,10 @@ Adjust the parameters below to compare the classic **decay only** profile agains
     padding: 1rem;
   }
 
-  #peatCanvas {
+  .canvas-element {
     display: block;
     width: 100%;
-    height: 420px;
+    height: 380px;
   }
 
   .model-notes {
@@ -211,7 +216,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
       <div class="metric-value" id="canvasMetricWithCreep">-</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Depth Reduction</div>
+      <div class="metric-title">Reduction</div>
       <div class="metric-value" id="canvasMetricReduction">-</div>
     </div>
     <div class="metric-card">
@@ -220,17 +225,24 @@ Adjust the parameters below to compare the classic **decay only** profile agains
     </div>
   </div>
 
-  <div class="chart-wrapper">
-    <canvas id="peatCanvas"></canvas>
+  <div class="charts-grid">
+    <div class="chart-wrapper">
+      <h4 style="margin-top:0; margin-bottom: 0.5rem; color:#157878; text-align:center;">Estimated Depth Profile ($H$, meters)</h4>
+      <canvas id="peatDepthCanvas" class="canvas-element"></canvas>
+    </div>
+    <div class="chart-wrapper">
+      <h4 style="margin-top:0; margin-bottom: 0.5rem; color:#157878; text-align:center;">Cumulative Dry Mass Profile ($M$, kg/m²)</h4>
+      <canvas id="peatMassCanvas" class="canvas-element"></canvas>
+    </div>
   </div>
 
   <div class="model-notes">
-    <strong>How to read the plot:</strong>
+    <strong>How to read the plots:</strong>
     <ul>
       <li><strong>X-axis:</strong> peat cohort age, reversed so present day is at the right and older peat extends leftward.</li>
-      <li><strong>Y-axis:</strong> estimated cumulative peat depth, inverted so the surface is at the top.</li>
-      <li><strong>Solid teal line:</strong> accumulation plus first-order decay.</li>
-      <li><strong>Dashed red line:</strong> the same model with a simple depth-dependent creep export term.</li>
+      <li><strong>Y-axes:</strong> inverted so surface ($0$) is at the top. Left plot shows Depth ($H$, m); right plot shows Cumulative Mass ($M$, $\mathrm{kg\,m^{-2}}$).</li>
+      <li><strong>Solid teal line:</strong> classic Clymo model (decay only).</li>
+      <li><strong>Dashed red line:</strong> model with depth-dependent creep export term.</li>
     </ul>
   </div>
 </div>
@@ -308,7 +320,7 @@ function drawSeries(ctx, data, plot, colour, dashed) {
   ctx.beginPath();
   data.ages.forEach((age, index) => {
     const x = plot.left + plot.width - (age / CANVAS_MODEL_CONSTANTS.years) * plot.width;
-    const y = plot.top + (data.series[index] / plot.maxDepth) * plot.height;
+    const y = plot.top + (data.series[index] / plot.maxY) * plot.height;
     if (index === 0) {
       ctx.moveTo(x, y);
     } else {
@@ -319,12 +331,12 @@ function drawSeries(ctx, data, plot, colour, dashed) {
   ctx.restore();
 }
 
-function drawCanvasPlot(data) {
-  const canvas = document.getElementById('peatCanvas');
+function drawSingleCanvasPlot(canvasId, titleText, yAxisLabel, seriesBaseline, seriesCreep, ages) {
+  const canvas = document.getElementById(canvasId);
   const wrapper = canvas.parentElement;
   const ratio = window.devicePixelRatio || 1;
-  const cssWidth = Math.max(wrapper.clientWidth - 32, 320);
-  const cssHeight = 420;
+  const cssWidth = Math.max(wrapper.clientWidth - 32, 280);
+  const cssHeight = 360;
   canvas.width = cssWidth * ratio;
   canvas.height = cssHeight * ratio;
   canvas.style.width = `${cssWidth}px`;
@@ -334,16 +346,16 @@ function drawCanvasPlot(data) {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
 
-  const maxDepth = Math.max(...data.depthDecayOnly, ...data.depthWithCreep) * 1.08;
+  const maxY = Math.max(...seriesBaseline, ...seriesCreep) * 1.08;
   const plot = {
-    left: 68,
-    right: 24,
-    top: 32,
-    bottom: 58
+    left: 65,
+    right: 20,
+    top: 25,
+    bottom: 55
   };
   plot.width = cssWidth - plot.left - plot.right;
   plot.height = cssHeight - plot.top - plot.bottom;
-  plot.maxDepth = Math.max(maxDepth, 0.1);
+  plot.maxY = Math.max(maxY, 0.1);
 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, cssWidth, cssHeight);
@@ -351,18 +363,18 @@ function drawCanvasPlot(data) {
   ctx.strokeStyle = '#d8dee4';
   ctx.lineWidth = 1;
   ctx.fillStyle = '#586069';
-  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
 
   for (let i = 0; i <= 5; i++) {
     const y = plot.top + (i / 5) * plot.height;
-    const depth = (i / 5) * plot.maxDepth;
+    const val = (i / 5) * plot.maxY;
     ctx.beginPath();
     ctx.moveTo(plot.left, y);
     ctx.lineTo(plot.left + plot.width, y);
     ctx.stroke();
-    ctx.fillText(depth.toFixed(1), plot.left - 10, y);
+    ctx.fillText(val.toFixed(val >= 100 ? 0 : 1), plot.left - 8, y);
   }
 
   ctx.textAlign = 'center';
@@ -374,7 +386,7 @@ function drawCanvasPlot(data) {
     ctx.moveTo(x, plot.top);
     ctx.lineTo(x, plot.top + plot.height);
     ctx.stroke();
-    ctx.fillText(Math.round(age).toString(), x, plot.top + plot.height + 10);
+    ctx.fillText(Math.round(age).toString(), x, plot.top + plot.height + 8);
   }
 
   ctx.strokeStyle = '#24292e';
@@ -385,37 +397,34 @@ function drawCanvasPlot(data) {
   ctx.lineTo(plot.left + plot.width, plot.top + plot.height);
   ctx.stroke();
 
-  drawSeries(ctx, { ages: data.ages, series: data.depthDecayOnly }, plot, '#157878', false);
-  drawSeries(ctx, { ages: data.ages, series: data.depthWithCreep }, plot, '#d9534f', true);
+  drawSeries(ctx, { ages: ages, series: seriesBaseline }, plot, '#157878', false);
+  drawSeries(ctx, { ages: ages, series: seriesCreep }, plot, '#d9534f', true);
 
   ctx.fillStyle = '#24292e';
-  ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText('Peat Age-Depth Profile (10,000 Years)', plot.left + plot.width / 2, 22);
   ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText('Peat age (years, present day at right)', plot.left + plot.width / 2, cssHeight - 18);
+  ctx.textAlign = 'center';
+  ctx.fillText('Peat age (years)', plot.left + plot.width / 2, cssHeight - 16);
 
   ctx.save();
-  ctx.translate(18, plot.top + plot.height / 2);
+  ctx.translate(16, plot.top + plot.height / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText('Estimated cumulative depth (m)', 0, 0);
+  ctx.fillText(yAxisLabel, 0, 0);
   ctx.restore();
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#157878';
-  ctx.fillRect(plot.left + 12, plot.top + 12, 24, 3);
+  ctx.fillRect(plot.left + 10, plot.top + 10, 20, 3);
   ctx.fillStyle = '#24292e';
-  ctx.fillText('Decay only', plot.left + 44, plot.top + 14);
+  ctx.fillText('Decay only', plot.left + 35, plot.top + 11);
   ctx.strokeStyle = '#d9534f';
   ctx.setLineDash([8, 6]);
   ctx.beginPath();
-  ctx.moveTo(plot.left + 140, plot.top + 14);
-  ctx.lineTo(plot.left + 164, plot.top + 14);
+  ctx.moveTo(plot.left + 115, plot.top + 11);
+  ctx.lineTo(plot.left + 135, plot.top + 11);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillText('Decay + creep export', plot.left + 172, plot.top + 14);
+  ctx.fillText('Decay + creep export', plot.left + 142, plot.top + 11);
 }
 
 function updateCanvasPlot() {
@@ -431,8 +440,9 @@ function updateCanvasPlot() {
   document.getElementById('canvasMetricWithCreep').innerText = `${finalCreepDepth.toFixed(2)} m (${finalCreepMass.toFixed(0)} kg/m²)`;
   document.getElementById('canvasMetricReduction').innerText = `${diffPct.toFixed(1)}%`;
   document.getElementById('canvasMetricBeta').innerText = `${params.beta.toExponential(2)} m²/kg/yr`;
-  drawCanvasPlot(data);
 
+  drawSingleCanvasPlot('peatDepthCanvas', 'Estimated Depth Profile', 'Estimated depth (m)', data.depthDecayOnly, data.depthWithCreep, data.ages);
+  drawSingleCanvasPlot('peatMassCanvas', 'Cumulative Mass Profile', 'Cumulative mass (kg/m²)', data.massDecayOnly, data.massWithCreep, data.ages);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -477,4 +487,3 @@ $$\frac{dM(a)}{da} = A - \alpha M(a) - \beta M(a)^2, \quad M(0) = 0$$
 - **Asymptotic Thickness & Carbon Storage**: While the classic Clymo model reaches a maximum mass $M_{\infty} = A / \alpha$, the creep ODE caps the sustainable column mass at a lower positive fixed point $M^*$:
   $$M^* = \frac{-\alpha + \sqrt{\alpha^2 + 4 A \beta}}{2 \beta}$$
 - **Numerical Integration**: The profile $M(a)$ across $a \in [0, 10000\text{ yr}]$ is computed numerically using a 4th-order Runge-Kutta (RK4) integration scheme with $\Delta a = 20\text{ years}$.
-
