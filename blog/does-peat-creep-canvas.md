@@ -222,7 +222,7 @@ Adjust the model type and slider parameters below to compare the classic **decay
       <label for="canvasSliderCreep" id="canvasLabelCreep">Creep Speed ($u_\mathrm{ref}$)</label>
       <small id="canvasSublabelCreep">Speed at $H_\mathrm{ref}=3\,\mathrm{m}$</small>
       <div class="slider-row">
-        <input type="range" id="canvasSliderCreep" min="0" max="2" step="0.02" value="0.5">
+        <input type="range" id="canvasSliderCreep" min="0" max="10" step="0.1" value="0.5">
         <span class="value-badge" id="canvasValCreep">0.50 cm/yr</span>
       </div>
     </div>
