@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "Does peat creep?"
-description: "Interactive mathematical model exploring peat age-depth profiles and reverse-engineering equifinality challenges."
+description: "Interactive mathematical model exploring peat age-depth profiles under 3 physical creep mechanisms."
 ---
 
 # Does Peat Creep?
@@ -9,6 +9,29 @@ description: "Interactive mathematical model exploring peat age-depth profiles a
 Peatlands are dynamic, deformable porous media storing over 30% of global soil carbon. Researchers in the **MATHPEAT Network** are currently investigating the evidence for peat creep, how it should be represented mathematically, and what its consequences may be for peatland age-depth structure and long-term carbon storage.
 
 The model below is deliberately simple. It is not a full 3D landscape-scale creep model: creep mostly redistributes peat locally. Here we ask what a single representative column would look like under different vertical creep velocity profiles if unresolved downslope or marginal creep eventually exports material from that column.
+
+---
+
+## Simple Column Model & 3 Physical Creep Formulations
+
+Let $M(a)$ be cumulative peat dry mass per unit area at cohort age $a$, measured in $\mathrm{kg\,m^{-2}}$. The estimated peat depth is
+
+$$H(a) = \frac{M(a)}{\rho_b},$$
+
+where fixed dry bulk density is $\rho_b = 100\,\mathrm{kg\,m^{-3}}$.
+
+Without creep, the classic accumulation-decay balance (*Clymo 1984*) is
+
+$$\frac{dM}{da} = A - \alpha M, \qquad M(0)=0,$$
+
+where $A$ is the accumulation flux (default $60\,\mathrm{g\,m^{-2}\,yr^{-1}}$) and $\alpha$ is the first-order decay rate (default $10^{-4}\,\mathrm{yr^{-1}}$).
+
+### 3 Physical Creep Velocity Profiles
+You can choose between **3 distinct physical mechanisms** for how creep velocity varies vertically through the column:
+
+1. **Overburden-Driven Creep ($u \propto H$):** Creep speed increases with total overburden mass $M$. The slider specifies the creep speed observed at the final 10,000-year core depth ($u_{\text{final}}$). Export scales quadratically ($\beta M^2$). Creep loss accelerates at depth.
+2. **Linear Shear Profile (Gravity-Driven Shear):** Maximum creep speed $u_{\text{surf}}$ at the surface, decreasing linearly to $0$ at bedrock ($H_{\text{tot}}$). Deep peat near bedrock stops creeping and follows pure decay kinetics.
+3. **Surface-Driven Processes (e.g. Freeze-Thaw / Active Layer):** Creep speed is maximum at the surface ($u_{\text{surf}}$) and decreases linearly to $0$ at a tunable active layer depth $H_{\text{active}}$ (default $1.0\,\mathrm{m}$). Peat buried deeper below $H_{\text{active}}$ stops creeping.
 
 ---
 
@@ -244,9 +267,9 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
         <label for="selectModel">Creep Mechanism</label>
         <small id="modelHelpText">Select vertical velocity profile</small>
         <select id="selectModel">
-          <option value="overburden" selected>1. Overburden Creep (u ∝ H, max at depth)</option>
-          <option value="shear">2. Surface Shear (max at surface, 0 at bed)</option>
-          <option value="activeLayer">3. Active Upper Layer (max at surface, 0 at 1m deep)</option>
+          <option value="overburden" selected>1. Overburden Creep (u ∝ H, speed at final depth)</option>
+          <option value="shear">2. Linear Shear Profile (gravity-driven shear, 0 at bed)</option>
+          <option value="activeLayer">3. Surface-Driven Processes (e.g. freeze-thaw, active layer)</option>
         </select>
       </div>
 
@@ -269,11 +292,21 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
       </div>
 
       <div class="control-field">
-        <label for="sliderCreep" id="labelCreep">Creep Speed ($u_\mathrm{ref}$)</label>
-        <small id="sublabelCreep">Speed at $H_\mathrm{ref}=3\,\mathrm{m}$</small>
+        <label for="sliderCreep" id="labelCreep">Creep Speed ($u_\mathrm{final}$)</label>
+        <small id="sublabelCreep">Speed observed at final 10k-yr depth</small>
         <div class="slider-row">
           <input type="range" id="sliderCreep" min="0" max="10" step="0.1" value="0.5">
           <span class="value-badge" id="valCreep">0.50 cm/yr</span>
+        </div>
+      </div>
+
+      <!-- Conditional Active Layer Depth Slider (Model 3) -->
+      <div class="control-field" id="containerActiveDepth" style="display: none; background: #fff8f8; padding: 0.6rem; border-radius: 4px; border: 1px solid #f5c6cb;">
+        <label for="sliderActiveDepth">Active Creep Depth ($H_{\text{active}}$)</label>
+        <small>Depth where creep velocity drops to 0</small>
+        <div class="slider-row">
+          <input type="range" id="sliderActiveDepth" min="0.2" max="5.0" step="0.1" value="1.0">
+          <span class="value-badge" id="valActiveDepth">1.0 m</span>
         </div>
       </div>
     </div>
@@ -314,7 +347,7 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
   </div>
 
   <div class="model-notes">
-    💡 <strong>Fitting Experiment:</strong> Increase $A_{\text{Creep}}$ (e.g. to $90\text{ g m}^{-2}\text{yr}^{-1}$) and $u_{\text{ref}}$ (e.g. to $2\text{ cm/yr}$). Notice how the Creep core thins. Now try adjusting $A_{\text{Clymo}}$ downwards to match the final 10,000-year depth. Notice that matching final depth forces you to severely underestimate true surface carbon accumulation $A$!
+    💡 <strong>Fitting Experiment:</strong> Increase $A_{\text{Creep}}$ (e.g. to $90\text{ g m}^{-2}\text{yr}^{-1}$) and $u_{\text{final}}$ (e.g. to $2\text{ cm/yr}$). Notice how the Creep core thins. Now try adjusting $A_{\text{Clymo}}$ downwards to match the final 10,000-year depth. Notice that matching final depth forces you to severely underestimate true surface carbon accumulation $A$!
   </div>
 </div>
 
@@ -326,7 +359,6 @@ const MODEL_CONSTANTS = {
   years: 10000,
   steps: 500,
   bulkDensity: 100,      // kg/m3
-  referenceDepth: 3,     // m
   exportLength: 100      // m
 };
 
@@ -342,24 +374,31 @@ function readInputs() {
   const A_g_creep = parseFloat(document.getElementById('sliderA_creep').value);
   const alpha_creep = parseFloat(document.getElementById('sliderAlpha_creep').value);
   const uRefCmYr = parseFloat(document.getElementById('sliderCreep').value);
+  const hActive = parseFloat(document.getElementById('sliderActiveDepth').value);
+
   const A_kg_creep = A_g_creep / 1000.0;
   const uRefMYr = uRefCmYr / 100.0;
 
+  const containerActive = document.getElementById('containerActiveDepth');
+
   // Update dynamic labels
   if (modelType === 'overburden') {
-    document.getElementById('modelHelpText').innerText = 'u ∝ H: creep speeds up at depth under overburden';
-    document.getElementById('labelCreep').innerText = 'Ref Creep Speed (u_ref)';
-    document.getElementById('sublabelCreep').innerText = 'Speed at H_ref = 3 m';
+    containerActive.style.display = 'none';
+    document.getElementById('modelHelpText').innerText = 'u ∝ H: speed scales with overburden, slider is speed at final depth';
+    document.getElementById('labelCreep').innerText = 'Final Depth Creep Speed (u_final)';
+    document.getElementById('sublabelCreep').innerText = 'Speed observed at final 10k-yr depth';
     document.getElementById('titleCoeff').innerText = 'Derived β';
   } else if (modelType === 'shear') {
-    document.getElementById('modelHelpText').innerText = 'u max at surface, 0 at bedrock (no-slip)';
+    containerActive.style.display = 'none';
+    document.getElementById('modelHelpText').innerText = 'u max at surface, linear shear down to 0 at bedrock (no-slip)';
     document.getElementById('labelCreep').innerText = 'Surface Speed (u_surf)';
     document.getElementById('sublabelCreep').innerText = 'Speed at surface (0 at bed)';
     document.getElementById('titleCoeff').innerText = 'Derived γ';
   } else if (modelType === 'activeLayer') {
-    document.getElementById('modelHelpText').innerText = 'u max at surface, linear down to 0 at 1m (0 deep)';
+    containerActive.style.display = 'block';
+    document.getElementById('modelHelpText').innerText = 'u max at surface, linear down to 0 at tunable active depth H_active';
     document.getElementById('labelCreep').innerText = 'Surface Speed (u_surf)';
-    document.getElementById('sublabelCreep').innerText = 'Speed at surface (0 at 1 m depth)';
+    document.getElementById('sublabelCreep').innerText = 'Speed at surface (0 at H_active)';
     document.getElementById('titleCoeff').innerText = 'Derived k_act';
   }
 
@@ -369,12 +408,13 @@ function readInputs() {
   document.getElementById('valA_creep').innerText = `${A_g_creep} g/m²/yr`;
   document.getElementById('valAlpha_creep').innerText = `${alpha_creep.toExponential(1)} /yr`;
   document.getElementById('valCreep').innerText = `${uRefCmYr.toFixed(2)} cm/yr`;
+  document.getElementById('valActiveDepth').innerText = `${hActive.toFixed(1)} m`;
 
-  return { modelType, A_kg_clymo, alpha_clymo, A_kg_creep, alpha_creep, uRefMYr };
+  return { modelType, A_kg_clymo, alpha_clymo, A_kg_creep, alpha_creep, uRefMYr, hActive };
 }
 
 function solveODE(params) {
-  const { modelType, A_kg_clymo, alpha_clymo, A_kg_creep, alpha_creep, uRefMYr } = params;
+  const { modelType, A_kg_clymo, alpha_clymo, A_kg_creep, alpha_creep, uRefMYr, hActive } = params;
   const dt = MODEL_CONSTANTS.years / MODEL_CONSTANTS.steps;
   const ages = [];
   const depthDecayOnly = [];
@@ -385,49 +425,67 @@ function solveODE(params) {
   let M_creep = 0;
 
   const M_baseline_creep_final = (A_kg_creep / alpha_creep) * (1 - Math.exp(-alpha_creep * MODEL_CONSTANTS.years));
-  const beta = uRefMYr / (MODEL_CONSTANTS.exportLength * MODEL_CONSTANTS.referenceDepth * MODEL_CONSTANTS.bulkDensity);
   const gamma = uRefMYr / MODEL_CONSTANTS.exportLength;
   const k_act = uRefMYr / MODEL_CONSTANTS.exportLength;
-  const M_act = 1.0 * MODEL_CONSTANTS.bulkDensity; // 100 kg/m2 (1m depth)
+  const M_act = hActive * MODEL_CONSTANTS.bulkDensity;
 
-  for (let i = 0; i <= MODEL_CONSTANTS.steps; i++) {
-    const age = i * dt;
-    ages.push(age);
+  // For Model 1 (Overburden creep), solve M_final iteratively so u(M_final) = uRefMYr
+  let M_final_est = M_baseline_creep_final * 0.8;
+  let beta = uRefMYr / (MODEL_CONSTANTS.exportLength * Math.max(10, M_final_est));
 
-    // 1. Clymo baseline profile (Decay Only)
-    const M_baseline = (A_kg_clymo / alpha_clymo) * (1 - Math.exp(-alpha_clymo * age));
-    massDecayOnly.push(M_baseline);
-    depthDecayOnly.push(M_baseline / MODEL_CONSTANTS.bulkDensity);
+  const maxIter = (modelType === 'overburden') ? 3 : 1;
 
-    // 2. Creep profile (Decay + Creep Export)
-    if (i === 0) {
-      massWithCreep.push(0);
-      depthWithCreep.push(0);
-    } else {
-      const f = (m) => {
-        if (modelType === 'overburden') {
-          return A_kg_creep - alpha_creep * m - beta * m * m;
-        } else if (modelType === 'shear') {
-          const M_bed = Math.max(m, M_baseline_creep_final * 0.85);
-          const factor = Math.max(0, 1 - m / M_bed);
-          return A_kg_creep - alpha_creep * m - gamma * m * factor;
-        } else if (modelType === 'activeLayer') {
-          // Model 3: Active top 1m layer, linear down to 0 at 1m (0 below 1m)
-          const factor = Math.max(0, 1 - m / M_act);
-          return A_kg_creep - alpha_creep * m - k_act * m * factor;
-        }
-      };
-
-      const k1 = f(M_creep);
-      const k2 = f(M_creep + 0.5 * dt * k1);
-      const k3 = f(M_creep + 0.5 * dt * k2);
-      const k4 = f(M_creep + dt * k3);
-      M_creep += (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4);
-      if (M_creep < 0) M_creep = 0;
-
-      massWithCreep.push(M_creep);
-      depthWithCreep.push(M_creep / MODEL_CONSTANTS.bulkDensity);
+  for (let iter = 0; iter < maxIter; iter++) {
+    if (modelType === 'overburden') {
+      beta = uRefMYr / (MODEL_CONSTANTS.exportLength * Math.max(10, M_final_est));
     }
+    
+    M_creep = 0;
+    massWithCreep.length = 0;
+    depthWithCreep.length = 0;
+    ages.length = 0;
+    massDecayOnly.length = 0;
+    depthDecayOnly.length = 0;
+
+    for (let i = 0; i <= MODEL_CONSTANTS.steps; i++) {
+      const age = i * dt;
+      if (iter === maxIter - 1) ages.push(age);
+
+      const M_baseline = (A_kg_clymo / alpha_clymo) * (1 - Math.exp(-alpha_clymo * age));
+      if (iter === maxIter - 1) {
+        massDecayOnly.push(M_baseline);
+        depthDecayOnly.push(M_baseline / MODEL_CONSTANTS.bulkDensity);
+      }
+
+      if (i === 0) {
+        massWithCreep.push(0);
+        depthWithCreep.push(0);
+      } else {
+        const f = (m) => {
+          if (modelType === 'overburden') {
+            return A_kg_creep - alpha_creep * m - beta * m * m;
+          } else if (modelType === 'shear') {
+            const M_bed = Math.max(m, M_baseline_creep_final * 0.85);
+            const factor = Math.max(0, 1 - m / M_bed);
+            return A_kg_creep - alpha_creep * m - gamma * m * factor;
+          } else if (modelType === 'activeLayer') {
+            const factor = Math.max(0, 1 - m / M_act);
+            return A_kg_creep - alpha_creep * m - k_act * m * factor;
+          }
+        };
+
+        const k1 = f(M_creep);
+        const k2 = f(M_creep + 0.5 * dt * k1);
+        const k3 = f(M_creep + 0.5 * dt * k2);
+        const k4 = f(M_creep + dt * k3);
+        M_creep += (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4);
+        if (M_creep < 0) M_creep = 0;
+
+        massWithCreep.push(M_creep);
+        depthWithCreep.push(M_creep / MODEL_CONSTANTS.bulkDensity);
+      }
+    }
+    M_final_est = M_creep;
   }
 
   let derivedCoeffStr = '';
@@ -557,7 +615,7 @@ function updatePlot() {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('selectModel').addEventListener('change', updatePlot);
-  ['sliderA_clymo', 'sliderAlpha_clymo', 'sliderA_creep', 'sliderAlpha_creep', 'sliderCreep'].forEach(id => {
+  ['sliderA_clymo', 'sliderAlpha_clymo', 'sliderA_creep', 'sliderAlpha_creep', 'sliderCreep', 'sliderActiveDepth'].forEach(id => {
     document.getElementById(id).addEventListener('input', updatePlot);
   });
   updatePlot();
@@ -581,20 +639,20 @@ Because environmental inputs are steady, $M(a) \equiv M(t)$. All curves start at
 
 In a 2D/3D continuum, mass conservation is $\frac{\partial M}{\partial t} + \nabla \cdot \left(\mathbf{u} M\right) = A - \alpha M$. Over representative column export length $L = 100\text{ m}$, the 3 creep velocity profiles correspond to:
 
-#### **Model 1: Overburden Creep ($u \propto H$)**
-- Velocity increases with total depth $H$: $u(H) = u_{\text{ref}} \frac{H}{H_{\text{ref}}}$.
-- Export flux is quadratic in mass: $\beta M^2$, where $\beta = \frac{u_{\text{ref}}}{L H_{\text{ref}} \rho_b}$.
+#### **Model 1: Overburden-Driven Creep ($u \propto H$, speed at final depth)**
+- Creep speed scales with depth $H$: $u(H) = u_{\text{final}} \frac{M}{M_{\text{final}}}$, where $u_{\text{final}}$ is the user-selected creep speed observed at the final 10,000-year core depth.
+- Export flux is quadratic in mass: $\beta M^2$, where $\beta = \frac{u_{\text{final}}}{L M_{\text{final}}}$.
 - **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \beta M(a)^2$. Creep loss accelerates at depth.
 
-#### **Model 2: Surface-Weighted Shear ($u_{\text{surf}}$ at top, $0$ at bed)**
+#### **Model 2: Linear Shear Profile (Gravity-Driven Shear)**
 - Velocity is maximum at surface ($u_{\text{surf}}$) and decreases linearly to $0$ at bedrock ($M_{\text{tot}}$): $u(M) = u_{\text{surf}} \left(1 - \frac{M}{M_{\text{tot}}}\right)$.
 - **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \gamma M(a) \left(1 - \frac{M(a)}{M_{\text{tot}}}\right)$, where $\gamma = \frac{u_{\text{surf}}}{L}$.
 - Deep peat near bedrock stops creeping, resuming pure decay kinetics!
 
-#### **Model 3: Active Upper Layer Creep ($u_{\text{surf}}$ at top, $0$ at $1\,\mathrm{m}$ deep)**
-- Creep velocity decreases linearly from $u_{\text{surf}}$ at top surface ($0\,\mathrm{m}$) to $0$ at depth $H_{\text{active}} = 1.0\,\mathrm{m}$ ($M_{\text{active}} = 100\text{ kg m}^{-2}$).
-- **ODE:** For $M \le M_{\text{active}}$, $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} M(a) \left(1 - \frac{M(a)}{M_{\text{active}}}\right)$, where $k_{\text{active}} = \frac{u_{\text{surf}}}{L}$. Below $1.0\,\mathrm{m}$, creep velocity is $0$.
-- Peat buried below $1.0\,\mathrm{m}$ stops creeping, preserving its profile shape.
+#### **Model 3: Surface-Driven Processes (e.g. Freeze-Thaw / Active Layer)**
+- Creep velocity is maximum at the surface ($u_{\text{surf}}$) and decreases linearly to $0$ at a tunable active depth $H_{\text{active}}$ ($M_{\text{active}} = H_{\text{active}} \rho_b$).
+- **ODE:** For $M \le M_{\text{active}}$, $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} M(a) \left(1 - \frac{M(a)}{M_{\text{active}}}\right)$, where $k_{\text{active}} = \frac{u_{\text{surf}}}{L}$. Below $H_{\text{active}}$, creep velocity is $0$.
+- Peat buried deeper than $H_{\text{active}}$ stops creeping.
 
 ---
 
