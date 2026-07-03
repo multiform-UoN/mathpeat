@@ -31,7 +31,7 @@ where $A$ is the accumulation flux (default $60\,\mathrm{g\,m^{-2}\,yr^{-1}}$) a
 ### 3 Physical Creep Velocity Profiles
 You can choose between **3 distinct physical mechanisms** for how creep velocity varies vertically through the column:
 
-1. **Overburden-Driven Creep ($u \propto H$):** Creep speed increases with total overburden mass $M$. The slider specifies the creep speed observed at the final 10,000-year core depth ($u_{\text{final}}$). Export scales quadratically ($\beta M^2$). Creep loss accelerates at depth.
+1. **Constant Deep Creep ($u \propto H$):** Creep speed increases with total overburden mass $M$. The slider specifies the creep speed observed at the final 10,000-year core depth ($u_{\text{final}}$). Export scales quadratically ($\beta M^2$). Creep loss accelerates at depth.
 2. **Linear Shear Profile (Gravity-Driven Shear):** Maximum creep speed $u_{\text{surf}}$ at the surface, decreasing linearly to $0$ at bedrock ($H_{\text{tot}}$). Deep peat near bedrock stops creeping and follows pure decay kinetics.
 3. **Surface-Driven Processes (e.g. Freeze-Thaw / Active Layer):** Creep speed is maximum at the surface ($u_{\text{surf}}$) and decreases linearly to $0$ at a tunable active layer depth $H_{\text{active}}$ (default $1.0\,\mathrm{m}$). Peat buried deeper below $H_{\text{active}}$ stops creeping.
 
@@ -271,7 +271,7 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
         <label for="canvasSelectModel">Creep Mechanism</label>
         <small id="canvasModelHelpText">Select vertical velocity profile</small>
         <select id="canvasSelectModel">
-          <option value="overburden" selected>1. Overburden Creep (u ∝ H, speed at final depth)</option>
+          <option value="overburden" selected>1. Constant Deep Creep (u ∝ H, speed at final depth)</option>
           <option value="shear">2. Linear Shear Profile (gravity-driven shear, 0 at bed)</option>
           <option value="activeLayer">3. Surface-Driven Processes (e.g. freeze-thaw, active layer)</option>
         </select>
@@ -648,7 +648,7 @@ Because environmental inputs are steady, $M(a) \equiv M(t)$. All curves start at
 
 In a 2D/3D continuum, mass conservation is $\frac{\partial M}{\partial t} + \nabla \cdot \left(\mathbf{u} M\right) = A - \alpha M$. Over representative column export length $L = 100\text{ m}$, the 3 creep velocity profiles correspond to:
 
-#### **Model 1: Overburden-Driven Creep ($u \propto H$, speed at final depth)**
+#### **Model 1: Constant Deep Creep ($u \propto H$, speed at final depth)**
 - Creep speed scales with depth $H$: $u(H) = u_{\text{final}} \frac{M}{M_{\text{final}}}$, where $u_{\text{final}}$ is the user-selected creep speed observed at the final 10,000-year core depth.
 - Export flux is quadratic in mass: $\beta M^2$, where $\beta = \frac{u_{\text{final}}}{L M_{\text{final}}}$.
 - **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \beta M(a)^2$. Creep loss accelerates at depth.
