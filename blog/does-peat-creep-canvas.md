@@ -1,52 +1,45 @@
 ---
 layout: default
 title: "Does peat creep? Canvas version"
-description: "Canvas-only version of the peat age-depth creep model displaying both depth and mass profiles."
+description: "Canvas version of the peat age-depth creep model featuring 3 distinct creep mechanisms."
 ---
 
 # Does Peat Creep? Canvas Version
 
 Peatlands are dynamic, deformable porous media storing over 30% of global soil carbon. Researchers in the **MATHPEAT Network** are currently investigating the evidence for peat creep, how it should be represented mathematically, and what its consequences may be for peatland age-depth structure and long-term carbon storage.
 
-The model below is deliberately simple. It is not a full landscape-scale creep model: creep mostly redistributes peat locally. Here we ask what a single representative column would look like if unresolved downslope or marginal creep eventually exports material from that column.
+The model below is deliberately simple. It is not a full 3D landscape-scale creep model: creep mostly redistributes peat locally. Here we ask what a single representative column would look like under different vertical creep velocity profiles if unresolved downslope or marginal creep exports material from that column.
 
 This comparison version uses the same equations and controls as the main interactive post, but the plots are drawn directly with the browser's HTML `<canvas>` element rather than Chart.js.
 
 ---
 
-## Simple Column Model
+## Simple Column Model & 3 Creep Formulations
 
 Let $M(a)$ be cumulative peat dry mass per unit area at cohort age $a$, measured in $\mathrm{kg\,m^{-2}}$. The estimated peat depth is
 
 $$H(a) = \frac{M(a)}{\rho_b},$$
 
-where the fixed bulk density used in the demo is $\rho_b = 100\,\mathrm{kg\,m^{-3}}$.
+where fixed dry bulk density is $\rho_b = 100\,\mathrm{kg\,m^{-3}}$.
 
-Without creep, the classic accumulation-decay balance is
+Without creep, the classic accumulation-decay balance (*Clymo 1984*) is
 
 $$\frac{dM}{da} = A - \alpha M, \qquad M(0)=0,$$
 
-where $A$ is the accumulation flux and $\alpha$ is the first-order decay rate. The default values are $A=60\,\mathrm{g\,m^{-2}\,yr^{-1}}$ and $\alpha=10^{-4}\,\mathrm{yr^{-1}}$.
+where $A$ is the accumulation flux (default $60\,\mathrm{g\,m^{-2}\,yr^{-1}}$) and $\alpha$ is the first-order decay rate (default $10^{-4}\,\mathrm{yr^{-1}}$).
 
-For creep, the visible slider controls a **reference lateral creep speed** $u_\mathrm{ref}$ in $\mathrm{cm\,yr^{-1}}$. To turn this into a one-column export term, we assume that the lateral creep speed scales with peat depth,
+### 3 Physical Creep Formulations
+You can choose between **3 distinct physical mechanisms** for how creep velocity varies vertically through the column:
 
-$$u(H) = u_\mathrm{ref}\frac{H}{H_\mathrm{ref}},$$
-
-and that net export from the representative column has fractional rate $u(H)/L$, where $L$ is an effective downslope or marginal export length. This gives
-
-$$\frac{dM}{da} = A - \alpha M - \beta(u_\mathrm{ref}) M^2,$$
-
-with
-
-$$\beta(u_\mathrm{ref}) = \frac{u_\mathrm{ref}}{L H_\mathrm{ref} \rho_b}.$$
-
-In this demo $H_\mathrm{ref}=3\,\mathrm{m}$ and $L=100\,\mathrm{m}$. These assumptions keep the control physically readable while preserving the intended simple nonlinear loss term.
+1. **Overburden Creep ($u \propto H$):** Creep speed increases with total overburden mass $M$. Export scales quadratically ($\beta M^2$). Creep loss accelerates at depth.
+2. **Surface-Weighted Shear ($u_{\text{surf}}$ at top, $0$ at bed):** Creep speed is maximum at the surface ($u_{\text{surf}}$) and decreases linearly to $0$ at bedrock ($H_{\text{tot}}$). Deep peat near bedrock stops creeping and follows pure decay kinetics.
+3. **Active Upper Layer ($u_0$ in top $1.5\,\mathrm{m}$, $0$ deep):** Creep occurs at constant speed $u_0$ only in the upper active layer ($H \le 1.5\,\mathrm{m}$). Peat buried deeper below $1.5\,\mathrm{m}$ stops creeping.
 
 ---
 
 ## Interactive Age-Depth & Cumulative Mass Model
 
-Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years. Both the **Estimated Depth Profile** (meters) and the **Cumulative Dry Mass Profile** ($\mathrm{kg\,m^{-2}}$) are rendered directly using Canvas below.
+Adjust the model type and slider parameters below to compare the classic **decay only** profile against the selected **creep model** profile over 10,000 years using pure HTML Canvas.
 
 {% raw %}
 <style>
@@ -61,7 +54,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 
   .controls-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.25rem;
     margin-bottom: 1.5rem;
   }
@@ -83,6 +76,21 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 
   .control-card small {
     color: #666;
+    display: block;
+    min-height: 2.2em;
+    line-height: 1.2;
+  }
+
+  .control-card select {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid #bce1e1;
+    background: #ffffff;
+    font-weight: 600;
+    color: #157878;
+    margin-top: 0.5rem;
+    cursor: pointer;
   }
 
   .slider-row {
@@ -119,7 +127,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 
   .metric-card {
     flex: 1;
-    min-width: 190px;
+    min-width: 180px;
     background: #ffffff;
     border-left: 4px solid #157878;
     border-radius: 4px;
@@ -139,7 +147,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
   }
 
   .metric-value {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: bold;
     color: #24292e;
     margin-top: 0.25rem;
@@ -161,7 +169,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
   .canvas-element {
     display: block;
     width: 100%;
-    height: 380px;
+    height: 360px;
   }
 
   .model-notes {
@@ -178,6 +186,18 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 
 <div class="model-container">
   <div class="controls-grid">
+    <!-- Model Profile Selection -->
+    <div class="control-card">
+      <label for="canvasSelectModel">Creep Mechanism</label>
+      <small id="canvasModelHelpText">Select vertical creep velocity profile</small>
+      <select id="canvasSelectModel">
+        <option value="overburden" selected>1. Overburden Creep (u ∝ H, max at depth)</option>
+        <option value="shear">2. Surface Shear (max at surface, 0 at bed)</option>
+        <option value="activeLayer">3. Active Upper Layer (max in top 1.5m, 0 deep)</option>
+      </select>
+    </div>
+
+    <!-- Accumulation Rate (A) -->
     <div class="control-card">
       <label for="canvasSliderA">Accumulation Rate ($A$)</label>
       <small>Surface peat input flux</small>
@@ -187,6 +207,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
       </div>
     </div>
 
+    <!-- Linear Decay Rate (alpha) -->
     <div class="control-card">
       <label for="canvasSliderAlpha">Decay Rate ($\alpha$)</label>
       <small>First-order catotelm decay rate</small>
@@ -196,9 +217,10 @@ Adjust the parameters below to compare the classic **decay only** profile agains
       </div>
     </div>
 
+    <!-- Creep Speed (u_ref) -->
     <div class="control-card">
-      <label for="canvasSliderCreep">Reference Creep Speed ($u_\mathrm{ref}$)</label>
-      <small>Lateral speed at $H_\mathrm{ref}=3\,\mathrm{m}$, converted internally to export</small>
+      <label for="canvasSliderCreep" id="canvasLabelCreep">Creep Speed ($u_\mathrm{ref}$)</label>
+      <small id="canvasSublabelCreep">Speed at $H_\mathrm{ref}=3\,\mathrm{m}$</small>
       <div class="slider-row">
         <input type="range" id="canvasSliderCreep" min="0" max="2" step="0.02" value="0.5">
         <span class="value-badge" id="canvasValCreep">0.50 cm/yr</span>
@@ -216,12 +238,12 @@ Adjust the parameters below to compare the classic **decay only** profile agains
       <div class="metric-value" id="canvasMetricWithCreep">-</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Reduction</div>
+      <div class="metric-title">Depth Reduction</div>
       <div class="metric-value" id="canvasMetricReduction">-</div>
     </div>
     <div class="metric-card">
-      <div class="metric-title">Derived $\beta$</div>
-      <div class="metric-value" id="canvasMetricBeta">-</div>
+      <div class="metric-title" id="canvasTitleCoeff">Derived Coeff</div>
+      <div class="metric-value" id="canvasMetricCoeff">-</div>
     </div>
   </div>
 
@@ -239,10 +261,10 @@ Adjust the parameters below to compare the classic **decay only** profile agains
   <div class="model-notes">
     <strong>How to read the plots:</strong>
     <ul>
-      <li><strong>X-axis:</strong> peat cohort age, reversed so present day is at the right and older peat extends leftward.</li>
-      <li><strong>Y-axes:</strong> inverted so surface ($0$) is at the top. Left plot shows Depth ($H$, m); right plot shows Cumulative Mass ($M$, $\mathrm{kg\,m^{-2}}$).</li>
+      <li><strong>Surface Slope ($a=0$):</strong> All curves start with initial slope $A$ at present day ($a=0$) because fresh surface peat has not yet accumulated depth or decayed.</li>
+      <li><strong>Y-axes:</strong> Inverted (surface $0$ at top). Left plot shows Estimated Depth ($H$, m); right plot shows Cumulative Mass ($M$, $\mathrm{kg\,m^{-2}}$).</li>
       <li><strong>Solid teal line:</strong> classic Clymo model (decay only).</li>
-      <li><strong>Dashed red line:</strong> model with depth-dependent creep export term.</li>
+      <li><strong>Dashed red line:</strong> selected creep profile model.</li>
     </ul>
   </div>
 </div>
@@ -257,26 +279,39 @@ const CANVAS_MODEL_CONSTANTS = {
 };
 
 function readCanvasInputs() {
+  const modelType = document.getElementById('canvasSelectModel').value;
   const A_g = parseFloat(document.getElementById('canvasSliderA').value);
   const alpha = parseFloat(document.getElementById('canvasSliderAlpha').value);
   const uRefCmYr = parseFloat(document.getElementById('canvasSliderCreep').value);
   const A_kg = A_g / 1000.0;
   const uRefMYr = uRefCmYr / 100.0;
-  const beta = uRefMYr / (
-    CANVAS_MODEL_CONSTANTS.exportLength *
-    CANVAS_MODEL_CONSTANTS.referenceDepth *
-    CANVAS_MODEL_CONSTANTS.bulkDensity
-  );
+
+  if (modelType === 'overburden') {
+    document.getElementById('canvasModelHelpText').innerText = 'u ∝ H: creep speeds up at depth under overburden';
+    document.getElementById('canvasLabelCreep').innerText = 'Ref Creep Speed (u_ref)';
+    document.getElementById('canvasSublabelCreep').innerText = 'Speed at H_ref = 3 m';
+    document.getElementById('canvasTitleCoeff').innerText = 'Derived β';
+  } else if (modelType === 'shear') {
+    document.getElementById('canvasModelHelpText').innerText = 'u max at surface, 0 at bedrock (no-slip)';
+    document.getElementById('canvasLabelCreep').innerText = 'Surface Speed (u_surf)';
+    document.getElementById('canvasSublabelCreep').innerText = 'Speed at surface (0 at bed)';
+    document.getElementById('canvasTitleCoeff').innerText = 'Derived γ';
+  } else if (modelType === 'activeLayer') {
+    document.getElementById('canvasModelHelpText').innerText = 'u constant in top 1.5m, 0 in deep peat';
+    document.getElementById('canvasLabelCreep').innerText = 'Active Speed (u_active)';
+    document.getElementById('canvasSublabelCreep').innerText = 'Speed in top 1.5 m active layer';
+    document.getElementById('canvasTitleCoeff').innerText = 'Derived k_act';
+  }
 
   document.getElementById('canvasValA').innerText = `${A_g} g/m²/yr`;
   document.getElementById('canvasValAlpha').innerText = `${alpha.toExponential(1)} /yr`;
   document.getElementById('canvasValCreep').innerText = `${uRefCmYr.toFixed(2)} cm/yr`;
 
-  return { A_kg, alpha, beta };
+  return { modelType, A_kg, alpha, uRefMYr };
 }
 
 function solveCanvasODE(params) {
-  const { A_kg, alpha, beta } = params;
+  const { modelType, A_kg, alpha, uRefMYr } = params;
   const dt = CANVAS_MODEL_CONSTANTS.years / CANVAS_MODEL_CONSTANTS.steps;
   const ages = [];
   const depthDecayOnly = [];
@@ -284,6 +319,12 @@ function solveCanvasODE(params) {
   const massDecayOnly = [];
   const massWithCreep = [];
   let M_creep = 0;
+
+  const M_baseline_final = (A_kg / alpha) * (1 - Math.exp(-alpha * CANVAS_MODEL_CONSTANTS.years));
+  const beta = uRefMYr / (CANVAS_MODEL_CONSTANTS.exportLength * CANVAS_MODEL_CONSTANTS.referenceDepth * CANVAS_MODEL_CONSTANTS.bulkDensity);
+  const gamma = uRefMYr / CANVAS_MODEL_CONSTANTS.exportLength;
+  const k_act = uRefMYr / CANVAS_MODEL_CONSTANTS.exportLength;
+  const M_act = 1.5 * CANVAS_MODEL_CONSTANTS.bulkDensity;
 
   for (let i = 0; i <= CANVAS_MODEL_CONSTANTS.steps; i++) {
     const age = i * dt;
@@ -297,19 +338,36 @@ function solveCanvasODE(params) {
       massWithCreep.push(0);
       depthWithCreep.push(0);
     } else {
-      const f = (M) => A_kg - alpha * M - beta * M * M;
+      const f = (m) => {
+        if (modelType === 'overburden') {
+          return A_kg - alpha * m - beta * m * m;
+        } else if (modelType === 'shear') {
+          const M_bed = Math.max(m, M_baseline_final * 0.85);
+          const factor = Math.max(0, 1 - m / M_bed);
+          return A_kg - alpha * m - gamma * m * factor;
+        } else if (modelType === 'activeLayer') {
+          return A_kg - alpha * m - k_act * Math.min(m, M_act);
+        }
+      };
+
       const k1 = f(M_creep);
       const k2 = f(M_creep + 0.5 * dt * k1);
       const k3 = f(M_creep + 0.5 * dt * k2);
       const k4 = f(M_creep + dt * k3);
       M_creep += (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4);
       if (M_creep < 0) M_creep = 0;
+
       massWithCreep.push(M_creep);
       depthWithCreep.push(M_creep / CANVAS_MODEL_CONSTANTS.bulkDensity);
     }
   }
 
-  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep };
+  let derivedCoeffStr = '';
+  if (modelType === 'overburden') derivedCoeffStr = `${beta.toExponential(2)} m²/kg/yr`;
+  else if (modelType === 'shear') derivedCoeffStr = `${gamma.toExponential(2)} /yr`;
+  else if (modelType === 'activeLayer') derivedCoeffStr = `${k_act.toExponential(2)} /yr`;
+
+  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, derivedCoeffStr };
 }
 
 function drawSeries(ctx, data, plot, colour, dashed) {
@@ -331,12 +389,12 @@ function drawSeries(ctx, data, plot, colour, dashed) {
   ctx.restore();
 }
 
-function drawSingleCanvasPlot(canvasId, titleText, yAxisLabel, seriesBaseline, seriesCreep, ages) {
+function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep, ages) {
   const canvas = document.getElementById(canvasId);
   const wrapper = canvas.parentElement;
   const ratio = window.devicePixelRatio || 1;
   const cssWidth = Math.max(wrapper.clientWidth - 32, 280);
-  const cssHeight = 360;
+  const cssHeight = 340;
   canvas.width = cssWidth * ratio;
   canvas.height = cssHeight * ratio;
   canvas.style.width = `${cssWidth}px`;
@@ -439,13 +497,14 @@ function updateCanvasPlot() {
   document.getElementById('canvasMetricDecayOnly').innerText = `${finalBaselineDepth.toFixed(2)} m (${finalBaselineMass.toFixed(0)} kg/m²)`;
   document.getElementById('canvasMetricWithCreep').innerText = `${finalCreepDepth.toFixed(2)} m (${finalCreepMass.toFixed(0)} kg/m²)`;
   document.getElementById('canvasMetricReduction').innerText = `${diffPct.toFixed(1)}%`;
-  document.getElementById('canvasMetricBeta').innerText = `${params.beta.toExponential(2)} m²/kg/yr`;
+  document.getElementById('canvasMetricCoeff').innerText = data.derivedCoeffStr;
 
-  drawSingleCanvasPlot('peatDepthCanvas', 'Estimated Depth Profile', 'Estimated depth (m)', data.depthDecayOnly, data.depthWithCreep, data.ages);
-  drawSingleCanvasPlot('peatMassCanvas', 'Cumulative Mass Profile', 'Cumulative mass (kg/m²)', data.massDecayOnly, data.massWithCreep, data.ages);
+  drawSingleCanvasPlot('peatDepthCanvas', 'Estimated depth (m)', data.depthDecayOnly, data.depthWithCreep, data.ages);
+  drawSingleCanvasPlot('peatMassCanvas', 'Cumulative mass (kg/m²)', data.massDecayOnly, data.massWithCreep, data.ages);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('canvasSelectModel').addEventListener('change', updateCanvasPlot);
   ['canvasSliderA', 'canvasSliderAlpha', 'canvasSliderCreep'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateCanvasPlot);
   });
@@ -459,31 +518,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ## Mathematical, Physical & Peatland Science Foundations
 
-### 1. Peatland Science Context
+### 1. Peatland Science & Eulerian vs. Lagrangian Views
 Standard 1D peat accumulation models (such as *Clymo 1984*) split the peat column into an upper oxic layer (acrotelm) and a lower water-saturated anoxic layer (catotelm). Organic matter enters the catotelm at surface accumulation flux $A$ ($\text{g m}^{-2}\text{yr}^{-1}$) and undergoes slow anaerobic decay at a first-order rate $\alpha$ ($\text{yr}^{-1}$).
 
-However, peat is not a rigid solid: it is a **deformable, fluid-saturated soft porous medium**. On sloped terrain or unconfined bog margins, the weight of the peat column generates gravitational shear stresses ($\tau \approx \rho g H \sin\theta$). This induces slow downslope or lateral **peat creep** — a rheological flow process that exports mass laterally from the local vertical column.
+Under steady-state conditions over 10,000 years:
+- **Lagrangian View (Cohort Age $a$):** Tracks a peat layer deposited $a$ years ago.
+- **Eulerian View (Calendar Time $t$):** Tracks total column growth over $t$ years.
+Because environmental inputs are steady, $M(a) \equiv M(t)$. All curves start at present day ($a=0$) with slope $\left.\frac{dM}{da}\right|_{a=0} = A$ because fresh surface peat has not yet accumulated depth or decayed.
 
-### 2. Physical & Spatial Derivation of Column Creep Export
-In a 2D/3D continuum, local mass conservation for cumulative peat mass per unit area $M(x, t)$ is:
-$$\frac{\partial M}{\partial t} + \nabla \cdot \left(\mathbf{u} M\right) = A - \alpha M$$
-where $\mathbf{u}$ is the depth-averaged lateral creep velocity. 
+### 2. Mathematical Derivation of the 3 Creep Mechanisms
 
-To represent unresolved lateral creep in a **single 1D representative column**:
-1. We assume the lateral creep velocity scales linearly with column depth $H$:
-   $$u(H) = u_{\text{ref}} \frac{H}{H_{\text{ref}}}$$
-   where $u_{\text{ref}}$ is the reference lateral speed (in $\text{cm yr}^{-1}$) at reference depth $H_{\text{ref}} = 3\text{ m}$.
-2. Over a characteristic bog export length scale $L = 100\text{ m}$, the fractional lateral export rate is $\frac{u(H)}{L}$.
-3. Expressing depth in terms of dry mass ($H = M / \rho_b$, with bulk density $\rho_b = 100\text{ kg m}^{-3}$), the lateral mass loss per unit area per year becomes:
-   $$\text{Export Flux} = M \cdot \frac{u(H)}{L} = M \cdot \frac{u_{\text{ref}} M}{L H_{\text{ref}} \rho_b} = \beta M^2$$
-   where the effective non-linear creep export coefficient $\beta$ is:
-   $$\beta(u_{\text{ref}}) = \frac{u_{\text{ref}}}{L \cdot H_{\text{ref}} \cdot \rho_b} \quad \left[\text{m}^2 \text{kg}^{-1}\text{yr}^{-1}\right]$$
+In a 2D/3D continuum, mass conservation is $\frac{\partial M}{\partial t} + \nabla \cdot \left(\mathbf{u} M\right) = A - \alpha M$. Over representative column export length $L = 100\text{ m}$, the 3 creep velocity profiles correspond to:
 
-### 3. Mathematical Properties of the Riccati ODE
-The governing equation for cumulative peat mass $M(a)$ at cohort age $a$ is a non-linear **Riccati ODE**:
-$$\frac{dM(a)}{da} = A - \alpha M(a) - \beta M(a)^2, \quad M(0) = 0$$
+#### **Model 1: Overburden Creep ($u \propto H$)**
+- Velocity increases with total depth $H$: $u(H) = u_{\text{ref}} \frac{H}{H_{\text{ref}}}$.
+- Export flux is quadratic in mass: $\beta M^2$, where $\beta = \frac{u_{\text{ref}}}{L H_{\text{ref}} \rho_b}$.
+- **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \beta M(a)^2$. Creep loss accelerates at depth.
 
-- **Linear Decay vs. Non-linear Creep**: Linear decay ($-\alpha M$) dominates at shallow depths, whereas non-linear creep ($-\beta M^2$) dominates at greater depths/masses.
-- **Asymptotic Thickness & Carbon Storage**: While the classic Clymo model reaches a maximum mass $M_{\infty} = A / \alpha$, the creep ODE caps the sustainable column mass at a lower positive fixed point $M^*$:
-  $$M^* = \frac{-\alpha + \sqrt{\alpha^2 + 4 A \beta}}{2 \beta}$$
-- **Numerical Integration**: The profile $M(a)$ across $a \in [0, 10000\text{ yr}]$ is computed numerically using a 4th-order Runge-Kutta (RK4) integration scheme with $\Delta a = 20\text{ years}$.
+#### **Model 2: Surface-Weighted Shear ($u_{\text{surf}}$ at top, $0$ at bed)**
+- Velocity is maximum at surface ($u_{\text{surf}}$) and decreases linearly to $0$ at bedrock ($M_{\text{tot}}$): $u(M) = u_{\text{surf}} \left(1 - \frac{M}{M_{\text{tot}}}\right)$.
+- **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - \gamma M(a) \left(1 - \frac{M(a)}{M_{\text{tot}}}\right)$, where $\gamma = \frac{u_{\text{surf}}}{L}$.
+- Deep peat near bedrock stops creeping, resuming pure decay kinetics!
+
+#### **Model 3: Active Upper Layer Creep ($u_0$ in top $1.5\,\mathrm{m}$, $0$ deep)**
+- Creep occurs at constant speed $u_0$ only in the upper active layer ($H \le 1.5\,\mathrm{m}$, $M \le M_{\text{active}} = 150\text{ kg m}^{-2}$).
+- **ODE:** $\frac{dM(a)}{da} = A - \alpha M(a) - k_{\text{active}} \min(M, M_{\text{active}})$, where $k_{\text{active}} = \frac{u_0}{L}$.
+- Peat buried below $1.5\,\mathrm{m}$ stops creeping, preserving its profile shape.
