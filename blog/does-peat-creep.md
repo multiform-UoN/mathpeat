@@ -49,6 +49,7 @@ Adjust the parameters below to compare the classic **decay only** profile agains
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+{% raw %}
 <style>
   .model-container {
     background: #f8f9fa;
@@ -403,6 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePlot();
 });
 </script>
+{% endraw %}
 
 ---
 

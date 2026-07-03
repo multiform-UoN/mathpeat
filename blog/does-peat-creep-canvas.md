@@ -49,6 +49,7 @@ In this demo $H_\mathrm{ref}=3\,\mathrm{m}$ and $L=100\,\mathrm{m}$. These assum
 
 Adjust the parameters below to compare the classic **decay only** profile against the simple **decay plus creep export** profile over 10,000 years.
 
+{% raw %}
 <style>
   .model-container {
     background: #f8f9fa;
@@ -442,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCanvasPlot();
 });
 </script>
+{% endraw %}
 
 ---
 
