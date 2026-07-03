@@ -36,9 +36,10 @@ MathPeat aims to bridge this gap by developing mathematical models and simulatio
 
 ## Recent Posts & Events
 
-- [MathPeat Monthly webinars](./blog/mathpeat-monthly-webinars.md)  
-- [Kick-off workshop – May 2024](./blog/2024-05-kick-off-workshop.md)
+- [Does peat creep? – Interactive Model](./blog/does-peat-creep.md)
 - [Dundee KE workshop - September 2025](./blog/2025-09-dundee-ke-workshop.md)
+- [Kick-off workshop – May 2024](./blog/2024-05-kick-off-workshop.md)
+- [MathPeat Monthly webinars](./blog/mathpeat-monthly-webinars.md)
 
 [See all posts →](./blog/)
 
