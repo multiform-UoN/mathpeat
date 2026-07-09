@@ -363,8 +363,15 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
     </div>
   </div>
 
-  <div class="model-notes">
-    💡 <strong>Fitting Experiment:</strong> Increase $A_{\text{Creep}}$ (e.g. to $90\text{ g m}^{-2}\text{yr}^{-1}$) and $u_{\text{meas}}$ (e.g. to $2\text{ cm/yr}$). Notice how the Creep core thins. Now try adjusting $A_0$ downwards, or setting a negative $\beta$ (e.g., $-4.0\times 10^{-5}$/yr) on the Clymo/Yu model to match the depth. Notice that the creep effect (material loss at depth) can be mathematically absorbed/reproduced by assuming an accumulation rate that increased over time (negative $\beta$)!
+  <div class="model-notes" style="border-left: 4px solid #157878; background: #fdfefe; padding: 1rem; border-radius: 6px;">
+    <h3 style="margin-top: 0; color: #157878; font-size: 1.1rem;">🔍 Step-by-Step Equifinality Challenge (Try It!)</h3>
+    <p style="margin-bottom: 0.8rem; font-size: 0.9rem;">Peatland science and inverse modeling are plagued by <strong>unidentifiability</strong>. Can you distinguish a creeping bog from climate change? Try this:</p>
+    <ol style="margin-bottom: 0; padding-left: 1.2rem; font-size: 0.85rem; line-height: 1.5;">
+      <li style="margin-bottom: 0.5rem;"><strong>Set up a creeping bog</strong>: In the red panel (Creep Model), increase true surface accumulation $A_{\text{Creep}}$ to <code>90 g/m²/yr</code> and measured creep speed $u_{\text{meas}}$ to <code>2.00 cm/yr</code>. Notice how the dashed red line (Creep model) thins out compared to the baseline.</li>
+      <li style="margin-bottom: 0.5rem;"><strong>Scenario A: Ignored Creep (Clymo fit)</strong>: Keep $\beta = 0$ on the left panel. To match the final depth of the creeping bog, you are forced to drag $A_0$ down to <code>~52 g/m²/yr</code>. If you ignore creep, your model severely underestimates historical carbon sequestration!</li>
+      <li style="margin-bottom: 0;"><strong>Scenario B: Hiding Creep in Climate Change (Yu fit)</strong>: Keep the creep profile active. Now, set $A_0$ to <code>90 g/m²/yr</code> (matching the true creep input) on the left panel, and adjust the temporal change slider $\beta$ to <code>-5.0e-5 /yr</code>. Notice how the solid teal line and the dashed red line match almost perfectly! 
+      <br><em>The mathematical catch:</em> A creeping bog behaves identically to a bog where accumulation increased exponentially over time. Without independent mechanical measurements, creep is completely hidden in the climate reconstruction!</li>
+    </ol>
   </div>
 </div>
 
