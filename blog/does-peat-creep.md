@@ -229,16 +229,16 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
 
 <div class="model-container">
   <div class="controls-split">
-    <!-- Clymo Model Panel -->
+    <!-- Clymo / Yu Model Panel -->
     <div class="param-group param-group-clymo">
       <div class="param-group-header">
-        <span class="param-group-title clymo">Clymo Model (Decay Only)</span>
+        <span class="param-group-title clymo">Clymo / Yu Model (Decay Only)</span>
         <span class="param-badge param-badge-clymo">Teal Line</span>
       </div>
 
       <div class="control-field">
-        <label for="sliderA_clymo">Accumulation ($A_{\text{Clymo}}$)</label>
-        <small>Surface peat input flux</small>
+        <label for="sliderA_clymo">Initial Accumulation ($A_0$)</label>
+        <small>Present-day surface peat input flux</small>
         <div class="slider-row">
           <input type="range" id="sliderA_clymo" min="20" max="150" step="5" value="60">
           <span class="value-badge" id="valA_clymo">60 g/m²/yr</span>
@@ -246,11 +246,20 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
       </div>
 
       <div class="control-field">
-        <label for="sliderAlpha_clymo">Decay Rate ($\alpha_{\text{Clymo}}$)</label>
+        <label for="sliderAlpha_clymo">Decay Rate ($\alpha$)</label>
         <small>First-order catotelm decay rate</small>
         <div class="slider-row">
           <input type="range" id="sliderAlpha_clymo" min="0.00001" max="0.0005" step="0.00001" value="0.0001">
           <span class="value-badge" id="valAlpha_clymo">1.0e-4 /yr</span>
+        </div>
+      </div>
+
+      <div class="control-field">
+        <label for="sliderBeta_clymo">Temporal Decay ($\beta$)</label>
+        <small>Accumulation decay rate ($A(a) = A_0 e^{-\beta a}$)</small>
+        <div class="slider-row">
+          <input type="range" id="sliderBeta_clymo" min="-0.0002" max="0.0002" step="0.00001" value="0">
+          <span class="value-badge" id="valBeta_clymo">0.0e+0 /yr</span>
         </div>
       </div>
     </div>
@@ -322,7 +331,7 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
 
   <div class="summary-metrics">
     <div class="metric-card">
-      <div class="metric-title">Decay Only Depth (10,000 yrs)</div>
+      <div class="metric-title">Clymo / Yu Depth (10,000 yrs)</div>
       <div class="metric-value" id="metricDecayOnly">-</div>
     </div>
     <div class="metric-card creep-card">
@@ -355,7 +364,7 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
   </div>
 
   <div class="model-notes">
-    💡 <strong>Fitting Experiment:</strong> Increase $A_{\text{Creep}}$ (e.g. to $90\text{ g m}^{-2}\text{yr}^{-1}$) and $u_{\text{meas}}$ (e.g. to $2\text{ cm/yr}$). Notice how the Creep core thins. Now try adjusting $A_{\text{Clymo}}$ downwards to match the final 10,000-year depth. Notice that matching final depth can force a decay-only interpretation to underestimate true surface carbon accumulation $A$.
+    💡 <strong>Fitting Experiment:</strong> Increase $A_{\text{Creep}}$ (e.g. to $90\text{ g m}^{-2}\text{yr}^{-1}$) and $u_{\text{meas}}$ (e.g. to $2\text{ cm/yr}$). Notice how the Creep core thins. Now try adjusting $A_0$ downwards, or setting a negative $\beta$ (e.g., $-4.0\times 10^{-5}$/yr) on the Clymo/Yu model to match the depth. Notice that the creep effect (material loss at depth) can be mathematically absorbed/reproduced by assuming an accumulation rate that increased over time (negative $\beta$)!
   </div>
 </div>
 
@@ -374,9 +383,10 @@ function readInputs() {
   const profileType = document.getElementById('selectProfile').value;
   const scalingType = document.getElementById('selectScaling').value;
 
-  // Clymo parameters
+  // Clymo/Yu parameters
   const A_g_clymo = parseFloat(document.getElementById('sliderA_clymo').value);
   const alpha_clymo = parseFloat(document.getElementById('sliderAlpha_clymo').value);
+  const beta_clymo = parseFloat(document.getElementById('sliderBeta_clymo').value);
   const A_kg_clymo = A_g_clymo / 1000.0;
 
   // Creep parameters
@@ -416,17 +426,18 @@ function readInputs() {
 
   document.getElementById('valA_clymo').innerText = `${A_g_clymo} g/m²/yr`;
   document.getElementById('valAlpha_clymo').innerText = `${alpha_clymo.toExponential(1)} /yr`;
+  document.getElementById('valBeta_clymo').innerText = `${beta_clymo.toExponential(1)} /yr`;
 
   document.getElementById('valA_creep').innerText = `${A_g_creep} g/m²/yr`;
   document.getElementById('valAlpha_creep').innerText = `${alpha_creep.toExponential(1)} /yr`;
   document.getElementById('valCreep').innerText = `${uRefCmYr.toFixed(2)} cm/yr`;
   document.getElementById('valShearDepth').innerText = `${hShear.toFixed(1)} m`;
 
-  return { profileType, scalingType, A_kg_clymo, alpha_clymo, A_kg_creep, alpha_creep, uRefMYr, hShear };
+  return { profileType, scalingType, A_kg_clymo, alpha_clymo, beta_clymo, A_kg_creep, alpha_creep, uRefMYr, hShear };
 }
 
 function solveODE(params) {
-  const { profileType, scalingType, A_kg_clymo, alpha_clymo, A_kg_creep, alpha_creep, uRefMYr, hShear } = params;
+  const { profileType, scalingType, A_kg_clymo, alpha_clymo, beta_clymo, A_kg_creep, alpha_creep, uRefMYr, hShear } = params;
   const dt = MODEL_CONSTANTS.years / MODEL_CONSTANTS.steps;
   const ages = [];
   const depthDecayOnly = [];
@@ -453,7 +464,12 @@ function solveODE(params) {
       const age = i * dt;
       if (iter === maxIter - 1) ages.push(age);
 
-      const M_baseline = (A_kg_clymo / alpha_clymo) * (1 - Math.exp(-alpha_clymo * age));
+      let M_baseline;
+      if (Math.abs(alpha_clymo - beta_clymo) < 1e-9) {
+        M_baseline = A_kg_clymo * age * Math.exp(-alpha_clymo * age);
+      } else {
+        M_baseline = (A_kg_clymo / (alpha_clymo - beta_clymo)) * (Math.exp(-beta_clymo * age) - Math.exp(-alpha_clymo * age));
+      }
       if (iter === maxIter - 1) {
         massDecayOnly.push(M_baseline);
         depthDecayOnly.push(M_baseline / MODEL_CONSTANTS.bulkDensity);
@@ -523,7 +539,7 @@ function createOrUpdateChart(existingChart, canvasId, yAxisLabel, labels, dataBa
         labels: labels,
         datasets: [
           {
-            label: 'Clymo Model (Decay Only)',
+            label: 'Clymo / Yu Model (Decay Only)',
             data: dataBaseline,
             borderColor: '#157878',
             backgroundColor: 'rgba(21, 120, 120, 0.1)',
@@ -627,7 +643,7 @@ function updatePlot() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('selectProfile').addEventListener('change', updatePlot);
   document.getElementById('selectScaling').addEventListener('change', updatePlot);
-  ['sliderA_clymo', 'sliderAlpha_clymo', 'sliderA_creep', 'sliderAlpha_creep', 'sliderCreep', 'sliderShearDepth'].forEach(id => {
+  ['sliderA_clymo', 'sliderAlpha_clymo', 'sliderBeta_clymo', 'sliderA_creep', 'sliderAlpha_creep', 'sliderCreep', 'sliderShearDepth'].forEach(id => {
     document.getElementById(id).addEventListener('input', updatePlot);
   });
   updatePlot();
@@ -647,7 +663,20 @@ Under steady-state conditions over 10,000 years:
 - **Eulerian View (Calendar Time $t$):** Tracks total column growth over $t$ years.
 Because environmental inputs are steady, $M(a) \equiv M(t)$. All curves start at present day ($a=0$) with slope $\left.\frac{dM}{da}\right|_{a=0} = A$ because fresh surface peat has not yet accumulated depth or decayed.
 
-### 2. Mathematical Derivation of the Creep Closure
+### 2. Temporal Variations: The Yu et al. (2003) & Belyea & Malmer (2004) Model
+Clymo's model assumes a constant peat addition rate $A$ through time. To allow for climate-driven or developmental variations, the model by *Yu et al. (2003)* permits the initial accumulation rate to decay or grow exponentially back through time, $A(a) = A_0 e^{-\beta a}$. The ODE for cumulative peat mass is:
+
+$$\frac{dM}{da} = A_0 e^{-\beta a} - \alpha M, \qquad M(0) = 0,$$
+
+where $A_0$ is the present-day surface accumulation flux, $\alpha$ is the decomposition rate, and $\beta$ controls the temporal accumulation change. Integrating forward in cohort age $a$ (equivalent to integrating backward in calendar time as in *Belyea & Malmer 2004*) yields:
+
+$$M(a) = \frac{A_0}{\alpha - \beta} \left( e^{-\beta a} - e^{-\alpha a} \right), \qquad \text{for } \alpha \neq \beta$$
+
+and $M(a) = A_0 a e^{-\alpha a}$ when $\alpha = \beta$. 
+
+A positive $\beta$ represents a peatland where initial accumulation was higher in the past (decreasing towards the present). A negative $\beta$ represents a peatland where initial accumulation was lower in the past (increasing towards the present).
+
+### 3. Mathematical Derivation of the Creep Closure
 
 In a 2D/3D continuum, mass conservation is $\frac{\partial M}{\partial t} + \nabla \cdot \left(\mathbf{u} M\right) = A - \alpha M$. In this one-column demo, unresolved lateral divergence is approximated by an export term
 
@@ -661,7 +690,6 @@ where $L=100\text{ m}$ is a representative export length. The user-controlled sp
 
 #### **Depth-Scaling Choices for the Measured Surface Speed**
 The depth-scaling selector asks how the present-day measured speed should be extrapolated backward when the peat column was thinner:
-
 - **Constant with depth, $u(H)=u_{\text{meas}}$:** effective driving and resistance scale together, or the measured motion is controlled mainly by boundary conditions and slope rather than total peat thickness.
 - **Overburden-scaled, $u(H)\propto H$:** driving stress grows with peat thickness or buoyant overburden. This is a simple gravity-loading closure when resistance is approximately linear.
 - **Viscous-film scaling, $u(H)\propto H^2$:** a Newtonian/lubrication-style idealisation with no slip at the base and stress accumulating through the mobile layer. It gives much slower creep when the bog was shallow and faster creep as it thickens.
@@ -671,11 +699,25 @@ These are not competing claims about the true law; they are deliberately simple 
 
 ---
 
-### 3. The Equifinality & Inverse Problem Challenge
+### 4. The Equifinality & Inverse Problem Challenge
 
-When analyzing an observed radiocarbon-dated core from a field site, scientists face an **inverse problem** (fitting $A$ and $\alpha$ from measured age-depth points).
+When analyzing an observed radiocarbon-dated core from a field site, scientists face an **inverse problem** (fitting parameters from measured age-depth points).
 
 If lateral creep is active in the bog but omitted from the inversion model:
 - The observer forces a decay-only Clymo curve to pass through the observed 10,000-year depth.
 - This forces the estimated accumulation parameter $A_{\text{Clymo}}$ to be significantly **lower** than the true input rate $A_{\text{Creep}}$ (or forces estimated decay $\alpha_{\text{Clymo}}$ to be artificially elevated).
-- Consequently, standard decay-only core interpretations can lead to substantial **underestimation of historical carbon sequestration rates** in creeping peatlands.
+
+#### **Hiding Creep in the Climate Inversion (Yu/Belyea Model)**
+If scientists use the more flexible Yu / Belyea model to fit the core (instead of Clymo's constant-$A$ model), they introduce the temporal parameter $\beta$. Because lateral creep exports peat and thins the profile at depth, **the effects of creep can be completely absorbed into the inferred temporal history**. 
+- A creeping bog fitted with a decay-only Yu model will yield an artificial **negative $\beta$** (interpreting the creep-induced thinning as a historical trend of increasing accumulation towards the present). 
+- This hides the mechanical loss within an incorrect climate-change reconstruction!
+
+#### **Sampling Bias in Core Selection**
+In field campaigns, researchers typically sample cores from the deepest part of the peatland (e.g., the plateau of a raised bog). This introduces a systematic **sampling bias**: by choosing the deepest and thickest plateaus, scientists preferentially sample exactly the locations where the peat column is oldest, yet where lateral creep stress and peat loss over millennia are also most active. 
+
+---
+
+### References
+* **Belyea, L.R. & Malmer, N. (2004).** *Carbon sequestration in peatland: patterns and mechanisms of response to climate change.* Global Change Biology, **10**, 1043–1052. [doi:10.1111/j.1529-8817.2003.00783.x](https://doi.org/10.1111/j.1529-8817.2003.00783.x)
+* **Clymo, R.S. (1984).** *The limits to peat growth.* Philosophical Transactions of the Royal Society of London. Series B, Biological Sciences, **303**, 605–654. [doi:10.1098/rstb.1984.0002](https://doi.org/10.1098/rstb.1984.0002)
+* **Yu, Z., Vitt, D.H., Campbell, I.D., et al. (2003).** *Understanding Holocene peat accumulation pattern of continental fens in western Canada.* Canadian Journal of Botany, **81**, 267–282. [doi:10.1139/b03-016](https://doi.org/10.1139/b03-016)
