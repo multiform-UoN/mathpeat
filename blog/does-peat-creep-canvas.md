@@ -460,9 +460,9 @@ function solveCanvasODE(params) {
 
       let M_baseline;
       if (Math.abs(alpha_clymo - beta_clymo) < 1e-9) {
-        M_baseline = A_kg_clymo * age * Math.exp(-alpha_clymo * age);
+        M_baseline = A_kg_clymo * age;
       } else {
-        M_baseline = (A_kg_clymo / (alpha_clymo - beta_clymo)) * (Math.exp(-beta_clymo * age) - Math.exp(-alpha_clymo * age));
+        M_baseline = (A_kg_clymo / (alpha_clymo - beta_clymo)) * (1 - Math.exp(-(alpha_clymo - beta_clymo) * age));
       }
       if (iter === maxIter - 1) {
         massDecayOnly.push(M_baseline);
@@ -675,17 +675,17 @@ Under steady-state conditions over 10,000 years:
 Because environmental inputs are steady, $M(a) \equiv M(t)$. All curves start at present day ($a=0$) with slope $\left.\frac{dM}{da}\right|_{a=0} = A$ because fresh surface peat has not yet accumulated depth or decayed.
 
 ### 2. Temporal Variations: The Yu et al. (2003) & Belyea & Malmer (2004) Model
-Clymo's model assumes a constant peat addition rate $A$ through time. To allow for climate-driven or developmental variations, the model by *Yu et al. (2003)* permits the initial accumulation rate to decay or grow exponentially back through time, $A(a) = A_0 e^{-\beta a}$. The ODE for cumulative peat mass is:
+Clymo's model assumes a constant peat addition rate $A$ through time. To allow for climate-driven or developmental variations, the model by *Yu et al. (2003)* and *Belyea & Malmer (2004)* permits the initial accumulation rate of cohorts to vary exponentially back through calendar time. Expressed in terms of cohort age $a$ today, the remaining mass of a cohort of age $a$ today is $m(a) = A_0 e^{-(\alpha - \beta) a}$.
 
-$$\frac{dM}{da} = A_0 e^{-\beta a} - \alpha M, \qquad M(0) = 0,$$
+Integrating this from age $0$ to $a$ today yields the cumulative peat mass profile:
 
-where $A_0$ is the present-day surface accumulation flux, $\alpha$ is the decomposition rate, and $\beta$ controls the temporal accumulation change. Integrating forward in cohort age $a$ (equivalent to integrating backward in calendar time as in *Belyea & Malmer 2004*) yields:
+$$M(a) = \frac{A_0}{\alpha - \beta} \left( 1 - e^{-(\alpha - \beta) a} \right), \qquad \text{for } \alpha \neq \beta$$
 
-$$M(a) = \frac{A_0}{\alpha - \beta} \left( e^{-\beta a} - e^{-\alpha a} \right), \qquad \text{for } \alpha \neq \beta$$
+and $M(a) = A_0 a$ when $\alpha = \beta$. 
 
-and $M(a) = A_0 a e^{-\alpha a}$ when $\alpha = \beta$. 
+Here, $A_0$ is the present-day surface accumulation flux, $\alpha$ is the decomposition rate, and $\beta$ controls the temporal accumulation change. Note that this Lagrangian age-depth profile within a single core today is mathematically identical to Clymo's constant-accumulation equation but with a shifted effective decay rate, $\alpha_{\text{eff}} = \alpha - \beta$. This is physically distinct from the calendar-time growth history of the total bog height over time, which is $H(t) = \frac{p}{\alpha - \beta}(e^{-\beta t} - e^{-\alpha t})$.
 
-A positive $\beta$ represents a peatland where initial accumulation was higher in the past (decreasing towards the present). A negative $\beta$ represents a peatland where initial accumulation was lower in the past (increasing towards the present).
+A positive $\beta$ represents a peatland where initial accumulation was higher in the past (decreasing towards the present, resulting in a thicker bottom). A negative $\beta$ represents a peatland where initial accumulation was lower in the past (increasing towards the present, resulting in a thinner bottom).
 
 ### 3. Mathematical Derivation of the Creep Closure
 
