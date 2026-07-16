@@ -877,6 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCanvasPlot();
 });
 </script>
+{% endraw %}
 
 ---
 
