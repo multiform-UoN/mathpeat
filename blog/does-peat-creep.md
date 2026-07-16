@@ -29,8 +29,113 @@ where $A$ is the accumulation flux (default $60\,\mathrm{g\,m^{-2}\,yr^{-1}}$) a
 ### Two Independent Creep Choices
 The creep model separates two assumptions that are often mixed together:
 
-1. **Vertical velocity profile:** either a uniform plug-like profile, where all represented peat creeps at the same effective speed, or a linear shear-zone profile, where speed is maximum at the surface and decreases to zero at a tunable depth $H_{\text{shear}}$.
+1. **Vertical velocity profile:** both profile choices restrict lateral creep to an active upper layer of thickness $H_{\text{active}}$ ($H_{\text{plug}}$ or $H_{\text{shear}}$):
+   - **Uniform / plug-like profile:** peat in the active layer moves downslope at a uniform velocity. Below this depth, the peat is stable (no creep).
+   - **Linear shear-zone profile:** speed is maximum at the surface and decreases linearly to zero at depth $H_{\text{shear}}$. Below this depth, the peat is stable.
 2. **Depth scaling of measured speed:** the user sets the present-day surface creep speed measured at the final simulated depth. The model then reconstructs what that speed would have been when the peat column was shallower using one of four simple hypotheses: constant, proportional to $H$, proportional to $H^2$, or proportional to $1/H$.
+
+<div class="chart-wrapper" style="margin-top: 1.5rem; padding: 1.5rem; text-align: center; border: 1px solid #d1d5da; border-radius: 6px;">
+  <h4 style="margin-top:0; margin-bottom: 1rem; color:#157878; text-align:center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">Creep Velocity Profiles: Plug vs. Shear Flow</h4>
+  <svg viewBox="0 0 600 220" width="100%" height="auto" style="max-width: 600px; display: block; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <defs>
+      <!-- Gradients -->
+      <linearGradient id="activePeat" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fdf2f2" />
+        <stop offset="100%" stop-color="#f5d6d6" />
+      </linearGradient>
+      <linearGradient id="stablePeat" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f6f8fa" />
+        <stop offset="100%" stop-color="#e1e4e8" />
+      </linearGradient>
+      <!-- Arrowhead -->
+      <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#d9534f" />
+      </marker>
+    </defs>
+
+    <!-- PLUG FLOW (Left) -->
+    <g transform="translate(10, 10)">
+      <!-- Title -->
+      <text x="120" y="20" text-anchor="middle" font-weight="bold" font-size="13" fill="#24292e">Uniform Plug Flow</text>
+      
+      <!-- Peat Column Box -->
+      <!-- Active Layer -->
+      <rect x="70" y="40" width="100" height="70" fill="url(#activePeat)" stroke="#e86c6c" stroke-width="1.5" rx="4" />
+      <!-- Stable Layer -->
+      <rect x="70" y="110" width="100" height="70" fill="url(#stablePeat)" stroke="#b0b7be" stroke-width="1.5" rx="4" />
+      
+      <!-- Ground Line -->
+      <line x1="40" y1="180" x2="200" y2="180" stroke="#586069" stroke-width="2" stroke-dasharray="4 3" />
+      
+      <!-- Velocity Profile Vectors -->
+      <!-- Profile Outline -->
+      <path d="M 70 40 L 130 40 L 130 110 L 70 110" fill="none" stroke="#d9534f" stroke-dasharray="3 3" stroke-width="1.5" />
+      
+      <!-- Arrows -->
+      <line x1="70" y1="55" x2="124" y2="55" stroke="#d9534f" stroke-width="2" marker-end="url(#arrow)" />
+      <line x1="70" y1="75" x2="124" y2="75" stroke="#d9534f" stroke-width="2" marker-end="url(#arrow)" />
+      <line x1="70" y1="95" x2="124" y2="95" stroke="#d9534f" stroke-width="2" marker-end="url(#arrow)" />
+      <!-- Zero speed symbols -->
+      <circle cx="70" cy="130" r="2.5" fill="#586069" />
+      <circle cx="70" cy="155" r="2.5" fill="#586069" />
+      
+      <!-- Labels -->
+      <text x="175" y="78" font-size="11" fill="#d9534f" font-weight="600">Active Layer</text>
+      <text x="175" y="93" font-size="10" fill="#6a737d">(Creeping)</text>
+      <text x="175" y="145" font-size="11" fill="#586069" font-weight="600">Stable Layer</text>
+      <text x="175" y="160" font-size="10" fill="#6a737d">(Stationary)</text>
+      
+      <!-- Dimension Lines -->
+      <line x1="50" y1="40" x2="50" y2="110" stroke="#24292e" stroke-width="1" />
+      <line x1="46" y1="40" x2="54" y2="40" stroke="#24292e" stroke-width="1" />
+      <line x1="46" y1="110" x2="54" y2="110" stroke="#24292e" stroke-width="1" />
+      <text x="35" y="80" text-anchor="middle" font-size="11" fill="#24292e" transform="rotate(-90 35 80)">H_active</text>
+
+      <text x="100" y="34" text-anchor="middle" font-size="10" fill="#d9534f" font-weight="bold">u = u_surf</text>
+    </g>
+
+    <!-- SHEAR FLOW (Right) -->
+    <g transform="translate(310, 10)">
+      <!-- Title -->
+      <text x="120" y="20" text-anchor="middle" font-weight="bold" font-size="13" fill="#24292e">Linear Shear Flow</text>
+      
+      <!-- Peat Column Box -->
+      <!-- Active Layer -->
+      <rect x="70" y="40" width="100" height="70" fill="url(#activePeat)" stroke="#e86c6c" stroke-width="1.5" rx="4" />
+      <!-- Stable Layer -->
+      <rect x="70" y="110" width="100" height="70" fill="url(#stablePeat)" stroke="#b0b7be" stroke-width="1.5" rx="4" />
+      
+      <!-- Ground Line -->
+      <line x1="40" y1="180" x2="200" y2="180" stroke="#586069" stroke-width="2" stroke-dasharray="4 3" />
+      
+      <!-- Velocity Profile Vectors -->
+      <!-- Profile Outline -->
+      <path d="M 70 40 L 130 40 L 70 110" fill="none" stroke="#d9534f" stroke-dasharray="3 3" stroke-width="1.5" />
+      
+      <!-- Arrows -->
+      <line x1="70" y1="55" x2="112" y2="55" stroke="#d9534f" stroke-width="2" marker-end="url(#arrow)" />
+      <line x1="70" y1="75" x2="95" y2="75" stroke="#d9534f" stroke-width="2" marker-end="url(#arrow)" />
+      <line x1="70" y1="95" x2="78" y2="95" stroke="#d9534f" stroke-width="2" marker-end="url(#arrow)" />
+      <!-- Zero speed symbols -->
+      <circle cx="70" cy="130" r="2.5" fill="#586069" />
+      <circle cx="70" cy="155" r="2.5" fill="#586069" />
+      
+      <!-- Labels -->
+      <text x="175" y="78" font-size="11" fill="#d9534f" font-weight="600">Active Layer</text>
+      <text x="175" y="93" font-size="10" fill="#6a737d">(Creeping)</text>
+      <text x="175" y="145" font-size="11" fill="#586069" font-weight="600">Stable Layer</text>
+      <text x="175" y="160" font-size="10" fill="#6a737d">(Stationary)</text>
+      
+      <!-- Dimension Lines -->
+      <line x1="50" y1="40" x2="50" y2="110" stroke="#24292e" stroke-width="1" />
+      <line x1="46" y1="40" x2="54" y2="40" stroke="#24292e" stroke-width="1" />
+      <line x1="46" y1="110" x2="54" y2="110" stroke="#24292e" stroke-width="1" />
+      <text x="35" y="80" text-anchor="middle" font-size="11" fill="#24292e" transform="rotate(-90 35 80)">H_active</text>
+
+      <text x="100" y="34" text-anchor="middle" font-size="10" fill="#d9534f" font-weight="bold">u decreases to 0</text>
+    </g>
+  </svg>
+</div>
 
 ---
 
@@ -318,9 +423,9 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
         </div>
       </div>
 
-      <div class="control-field" id="containerShearDepth" style="display: none; background: #fff8f8; padding: 0.6rem; border-radius: 4px; border: 1px solid #f5c6cb;">
-        <label for="sliderShearDepth">Shear-Zone Depth ($H_{\text{shear}}$)</label>
-        <small>Depth where the linear creep profile reaches zero</small>
+      <div class="control-field" id="containerShearDepth" style="background: #fff8f8; padding: 0.6rem; border-radius: 4px; border: 1px solid #f5c6cb;">
+        <label for="sliderShearDepth" id="labelShearDepth">Active Creep Depth (H<sub>active</sub>)</label>
+        <small id="descShearDepth">Depth limit for lateral motion</small>
         <div class="slider-row">
           <input type="range" id="sliderShearDepth" min="0.2" max="5.0" step="0.1" value="1.0">
           <span class="value-badge" id="valShearDepth">1.0 m</span>
@@ -361,6 +466,12 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
         <canvas id="peatMassChart"></canvas>
       </div>
     </div>
+    <div class="chart-wrapper">
+      <h4 style="margin-top:0; margin-bottom: 0.5rem; color:#157878; text-align:center;">Integrated Lateral Volume Flux ($Q$, m²/yr)</h4>
+      <div style="position: relative; height: 330px;">
+        <canvas id="peatFluxChart"></canvas>
+      </div>
+    </div>
   </div>
 
   <div class="model-notes" style="border-left: 4px solid #157878; background: #fdfefe; padding: 1rem; border-radius: 6px;">
@@ -378,6 +489,7 @@ If creep is ignored, fitting an observed profile with only Clymo's equation will
 <script>
 let depthChartInstance = null;
 let massChartInstance = null;
+let fluxChartInstance = null;
 
 const MODEL_CONSTANTS = {
   years: 10000,
@@ -413,12 +525,19 @@ function readInputs() {
   const hShear = parseFloat(shearSlider.value);
 
   const containerShear = document.getElementById('containerShearDepth');
-  containerShear.style.display = profileType === 'shear' ? 'block' : 'none';
+  containerShear.style.display = 'block'; // Always display as both plug and shear profiles now have an active layer limit
 
-  document.getElementById('profileHelpText').innerText =
-    profileType === 'uniform'
-      ? 'All represented peat moves with the same effective lateral speed'
-      : 'Surface speed decreases linearly to zero at the chosen shear-zone depth';
+  const labelActiveDepth = document.getElementById('labelShearDepth');
+  const descActiveDepth = document.getElementById('descShearDepth');
+  if (profileType === 'shear') {
+    labelActiveDepth.innerHTML = 'Active Creep Depth: Shear-Zone Depth (H<sub>shear</sub>)';
+    descActiveDepth.innerText = 'Depth where the linear creep velocity profile reaches zero';
+    document.getElementById('profileHelpText').innerText = 'Surface speed decreases linearly to zero at the chosen active depth';
+  } else {
+    labelActiveDepth.innerHTML = 'Active Creep Depth: Plug-Flow Limit (H<sub>plug</sub>)';
+    descActiveDepth.innerText = 'Depth below which there is no creep (plug flow only in the upper layer)';
+    document.getElementById('profileHelpText').innerText = 'All peat in the active upper layer moves with the same effective speed';
+  }
 
   const scalingHelp = {
     constant: 'Same measured speed throughout the growth history',
@@ -443,6 +562,18 @@ function readInputs() {
   return { profileType, scalingType, A_kg_clymo, alpha_clymo, beta_clymo, A_kg_creep, alpha_creep, uRefMYr, hShear };
 }
 
+function getIntegratedFlux(H, surfaceSpeed, profileType, hShear) {
+  if (profileType === 'uniform') {
+    return surfaceSpeed * Math.min(H, hShear);
+  } else { // shear
+    if (H <= hShear) {
+      return surfaceSpeed * H * (1 - H / (2 * hShear));
+    } else {
+      return surfaceSpeed * hShear / 2.0;
+    }
+  }
+}
+
 function solveODE(params) {
   const { profileType, scalingType, A_kg_clymo, alpha_clymo, beta_clymo, A_kg_creep, alpha_creep, uRefMYr, hShear } = params;
   const dt = MODEL_CONSTANTS.years / MODEL_CONSTANTS.steps;
@@ -451,6 +582,8 @@ function solveODE(params) {
   const depthWithCreep = [];
   const massDecayOnly = [];
   const massWithCreep = [];
+  const fluxDecayOnly = new Array(MODEL_CONSTANTS.steps + 1).fill(0);
+  const fluxWithCreep = [];
 
   let M_creep = 0;
 
@@ -463,6 +596,7 @@ function solveODE(params) {
     M_creep = 0;
     massWithCreep.length = 0;
     depthWithCreep.length = 0;
+    fluxWithCreep.length = 0;
     ages.length = 0;
     massDecayOnly.length = 0;
     depthDecayOnly.length = 0;
@@ -485,21 +619,35 @@ function solveODE(params) {
       if (i === 0) {
         massWithCreep.push(0);
         depthWithCreep.push(0);
+        fluxWithCreep.push(0);
       } else {
+        const currentH = Math.max(0, M_creep / MODEL_CONSTANTS.bulkDensity);
+        const H_ref = Math.max(H_min, H_final_est);
+        let currentSurfaceSpeed = uRefMYr;
+        if (scalingType === 'linear') {
+          currentSurfaceSpeed = uRefMYr * currentH / H_ref;
+        } else if (scalingType === 'quadratic') {
+          currentSurfaceSpeed = uRefMYr * Math.pow(currentH / H_ref, 2);
+        } else if (scalingType === 'inverse') {
+          currentSurfaceSpeed = uRefMYr * H_ref / Math.max(currentH, H_min);
+        }
+        
+        const flux = getIntegratedFlux(currentH, currentSurfaceSpeed, profileType, hShear);
+
         const f = (m) => {
           const H = Math.max(0, m / MODEL_CONSTANTS.bulkDensity);
-          const H_ref = Math.max(H_min, H_final_est);
+          const H_ref_int = Math.max(H_min, H_final_est);
           let surfaceSpeed = uRefMYr;
           if (scalingType === 'linear') {
-            surfaceSpeed = uRefMYr * H / H_ref;
+            surfaceSpeed = uRefMYr * H / H_ref_int;
           } else if (scalingType === 'quadratic') {
-            surfaceSpeed = uRefMYr * Math.pow(H / H_ref, 2);
+            surfaceSpeed = uRefMYr * Math.pow(H / H_ref_int, 2);
           } else if (scalingType === 'inverse') {
-            surfaceSpeed = uRefMYr * H_ref / Math.max(H, H_min);
+            surfaceSpeed = uRefMYr * H_ref_int / Math.max(H, H_min);
           }
           const profileFactor = profileType === 'shear'
             ? Math.max(0, 1 - H / Math.max(H_min, hShear))
-            : 1;
+            : (H <= hShear ? 1.0 : 0.0);
           const exportRate = (surfaceSpeed / MODEL_CONSTANTS.exportLength) * profileFactor;
           return A_kg_creep - alpha_creep * m - exportRate * m;
         };
@@ -513,12 +661,13 @@ function solveODE(params) {
 
         massWithCreep.push(M_creep);
         depthWithCreep.push(M_creep / MODEL_CONSTANTS.bulkDensity);
+        fluxWithCreep.push(flux);
       }
     }
     H_final_est = Math.max(H_min, M_creep / MODEL_CONSTANTS.bulkDensity);
   }
 
-  const profileLabel = profileType === 'uniform' ? 'uniform' : `linear to ${hShear.toFixed(1)} m`;
+  const profileLabel = profileType === 'uniform' ? `uniform to ${hShear.toFixed(1)} m` : `linear to ${hShear.toFixed(1)} m`;
   const scalingLabels = {
     constant: 'constant u',
     linear: 'u ∝ H',
@@ -527,7 +676,7 @@ function solveODE(params) {
   };
   const derivedCoeffStr = `${profileLabel}; ${scalingLabels[scalingType]}`;
 
-  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, derivedCoeffStr };
+  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, fluxDecayOnly, fluxWithCreep, derivedCoeffStr };
 }
 
 function createOrUpdateChart(existingChart, canvasId, yAxisLabel, labels, dataBaseline, dataCreep, unitFormatter) {
@@ -540,6 +689,7 @@ function createOrUpdateChart(existingChart, canvasId, yAxisLabel, labels, dataBa
     existingChart.update();
     return existingChart;
   } else {
+    const isFlux = canvasId === 'peatFluxChart';
     return new Chart(ctx, {
       type: 'line',
       data: {
@@ -598,7 +748,7 @@ function createOrUpdateChart(existingChart, canvasId, yAxisLabel, labels, dataBa
             grid: { color: '#eaeaea' }
           },
           y: {
-            reverse: true,
+            reverse: isFlux ? false : true, // Depth and mass are reversed because down is deeper, but flux is standard positive graph
             title: {
               display: true,
               text: yAxisLabel,
@@ -644,6 +794,16 @@ function updatePlot() {
     data.massDecayOnly,
     data.massWithCreep,
     (val) => `${val.toFixed(0)} kg/m²`
+  );
+
+  fluxChartInstance = createOrUpdateChart(
+    fluxChartInstance,
+    'peatFluxChart',
+    'Integrated lateral flux (m²/yr)',
+    data.ages,
+    data.fluxDecayOnly,
+    data.fluxWithCreep,
+    (val) => `${val.toFixed(4)} m²/yr (${(val * MODEL_CONSTANTS.bulkDensity).toFixed(2)} kg/m/yr)`
   );
 }
 
@@ -692,8 +852,25 @@ $$\frac{dM}{da} = A - \alpha M - \frac{u_{\text{eff}}(H)}{L}M,$$
 where $L=100\text{ m}$ is a representative export length. The user-controlled speed $u_{\text{meas}}$ is interpreted as the present-day surface creep speed measured when the simulated core has its final depth $H_{\text{final}}$.
 
 #### **Vertical Profile Choices**
-- **Uniform / plug-like profile:** the represented peat column has one effective lateral speed. This approximates bulk translation, block-like motion, or a depth-averaged export closure where the lower boundary does not impose a strong no-slip shear profile.
-- **Linear shear-zone profile:** speed is maximum at the surface and decreases linearly to zero at $H_{\text{shear}}$. This represents a no-slip or pinned lower boundary at the base of the mobile layer. If $H_{\text{shear}}$ is close to the full core depth, it approximates full-column gravity shear. If $H_{\text{shear}}$ is shallow, it represents surface-driven processes such as freeze-thaw, water-table movement, or seasonal swelling and shrinking.
+Both profile choices assume that lateral creep is restricted to an active upper layer of thickness $H_{\text{active}}$ (denoted $H_{\text{plug}}$ or $H_{\text{shear}}$):
+- **Uniform / plug-like profile:** peat in the active layer ($0 \le z \le H_{\text{plug}}$) moves downslope at a uniform velocity. Below this depth, the peat is stable (no creep).
+- **Linear shear-zone profile:** speed is maximum at the surface and decreases linearly to zero at depth $H_{\text{shear}}$. Below this depth, the peat is stable.
+
+#### **Integrated Lateral Flux**
+Integrating the lateral velocity profile $u(z)$ over the entire depth of the peat column $H$ gives the integrated lateral volume flux $Q$ (in $\mathrm{m^2\,yr^{-1}}$):
+
+$$Q = \int_0^H u(z) \, dz$$
+
+For the two profile types under an active layer of depth $H_{\text{active}}$ (where $u_{\text{surf}}$ is the surface speed):
+- **Uniform profile:**
+  $$Q = u_{\text{surf}} \min(H, H_{\text{active}})$$
+- **Linear shear profile:**
+  $$Q = \begin{cases} 
+  u_{\text{surf}} H \left(1 - \frac{H}{2 H_{\text{active}}}\right) & \text{for } H \le H_{\text{active}} \\
+  u_{\text{surf}} \frac{H_{\text{active}}}{2} & \text{for } H > H_{\text{active}}
+  \end{cases}$$
+
+This lateral volume flux can be converted to a lateral dry mass flux (in $\mathrm{kg\,m^{-1}\,yr^{-1}}$) by multiplying by the constant bulk density: $F_{\text{lateral}} = Q \cdot \rho_b$.
 
 #### **Depth-Scaling Choices for the Measured Surface Speed**
 The depth-scaling selector asks how the present-day measured speed should be extrapolated backward when the peat column was thinner:
