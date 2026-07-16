@@ -583,7 +583,9 @@ function solveODE(params) {
   const massDecayOnly = [];
   const massWithCreep = [];
   const fluxDecayOnly = new Array(MODEL_CONSTANTS.steps + 1).fill(0);
-  const fluxWithCreep = [];
+  const fluxSpatial = [];
+  const fluxHistorical = [];
+  const fluxHistoricalCohort = [];
 
   let M_creep = 0;
 
@@ -596,7 +598,7 @@ function solveODE(params) {
     M_creep = 0;
     massWithCreep.length = 0;
     depthWithCreep.length = 0;
-    fluxWithCreep.length = 0;
+    fluxHistorical.length = 0;
     ages.length = 0;
     massDecayOnly.length = 0;
     depthDecayOnly.length = 0;
@@ -619,7 +621,7 @@ function solveODE(params) {
       if (i === 0) {
         massWithCreep.push(0);
         depthWithCreep.push(0);
-        fluxWithCreep.push(0);
+        fluxHistorical.push(0);
       } else {
         const currentH = Math.max(0, M_creep / MODEL_CONSTANTS.bulkDensity);
         const H_ref = Math.max(H_min, H_final_est);
@@ -632,7 +634,7 @@ function solveODE(params) {
           currentSurfaceSpeed = uRefMYr * H_ref / Math.max(currentH, H_min);
         }
         
-        const flux = getIntegratedFlux(currentH, currentSurfaceSpeed, profileType, hShear);
+        const fluxHist = getIntegratedFlux(currentH, currentSurfaceSpeed, profileType, hShear);
 
         const f = (m) => {
           const H = Math.max(0, m / MODEL_CONSTANTS.bulkDensity);
@@ -661,10 +663,21 @@ function solveODE(params) {
 
         massWithCreep.push(M_creep);
         depthWithCreep.push(M_creep / MODEL_CONSTANTS.bulkDensity);
-        fluxWithCreep.push(flux);
+        fluxHistorical.push(fluxHist);
       }
     }
     H_final_est = Math.max(H_min, M_creep / MODEL_CONSTANTS.bulkDensity);
+  }
+
+  // Populate spatial flux (modern column) and map historical flux to cohort ages
+  for (let i = 0; i <= MODEL_CONSTANTS.steps; i++) {
+    const H_cohort = depthWithCreep[i];
+    const fSpatial = getIntegratedFlux(H_cohort, uRefMYr, profileType, hShear);
+    fluxSpatial.push(fSpatial);
+
+    // Cohort of age `age` corresponds to historical bog at time `years - age`
+    const fHist = fluxHistorical[MODEL_CONSTANTS.steps - i];
+    fluxHistoricalCohort.push(fHist);
   }
 
   const profileLabel = profileType === 'uniform' ? `uniform to ${hShear.toFixed(1)} m` : `linear to ${hShear.toFixed(1)} m`;
@@ -676,49 +689,69 @@ function solveODE(params) {
   };
   const derivedCoeffStr = `${profileLabel}; ${scalingLabels[scalingType]}`;
 
-  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, fluxDecayOnly, fluxWithCreep, derivedCoeffStr };
+  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, fluxDecayOnly, fluxSpatial, fluxHistoricalCohort, derivedCoeffStr };
 }
 
-function createOrUpdateChart(existingChart, canvasId, yAxisLabel, labels, dataBaseline, dataCreep, unitFormatter) {
+function createOrUpdateChart(existingChart, canvasId, yAxisLabel, labels, dataBaseline, dataCreep, unitFormatter, dataCreepHist = null) {
   const ctx = document.getElementById(canvasId).getContext('2d');
   
   if (existingChart) {
     existingChart.data.labels = labels;
     existingChart.data.datasets[0].data = dataBaseline;
     existingChart.data.datasets[1].data = dataCreep;
+    if (dataCreepHist && existingChart.data.datasets.length > 2) {
+      existingChart.data.datasets[2].data = dataCreepHist;
+    }
     existingChart.update();
     return existingChart;
   } else {
     const isFlux = canvasId === 'peatFluxChart';
+    const datasets = [
+      {
+        label: 'Clymo / Yu Model (Decay Only)',
+        data: dataBaseline,
+        borderColor: '#157878',
+        backgroundColor: 'rgba(21, 120, 120, 0.1)',
+        borderWidth: 3,
+        fill: false,
+        tension: 0.2,
+        pointRadius: 0,
+        pointHoverRadius: 5
+      },
+      {
+        label: isFlux ? 'Spatial Cumulative Flux (Present Day)' : 'Creep Model (Decay + Export)',
+        data: dataCreep,
+        borderColor: '#d9534f',
+        backgroundColor: 'rgba(217, 83, 79, 0.1)',
+        borderDash: isFlux ? [6, 4] : [6, 4],
+        borderWidth: 3,
+        fill: false,
+        tension: 0.2,
+        pointRadius: 0,
+        pointHoverRadius: 5
+      }
+    ];
+
+    if (isFlux && dataCreepHist) {
+      datasets.push({
+        label: 'Historical Total Flux (Over Time)',
+        data: dataCreepHist,
+        borderColor: '#f0ad4e',
+        backgroundColor: 'rgba(240, 173, 78, 0.1)',
+        borderDash: [2, 2],
+        borderWidth: 3,
+        fill: false,
+        tension: 0.2,
+        pointRadius: 0,
+        pointHoverRadius: 5
+      });
+    }
+
     return new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
-        datasets: [
-          {
-            label: 'Clymo / Yu Model (Decay Only)',
-            data: dataBaseline,
-            borderColor: '#157878',
-            backgroundColor: 'rgba(21, 120, 120, 0.1)',
-            borderWidth: 3,
-            fill: false,
-            tension: 0.2,
-            pointRadius: 0,
-            pointHoverRadius: 5
-          },
-          {
-            label: 'Creep Model (Decay + Export)',
-            data: dataCreep,
-            borderColor: '#d9534f',
-            backgroundColor: 'rgba(217, 83, 79, 0.1)',
-            borderDash: [6, 4],
-            borderWidth: 3,
-            fill: false,
-            tension: 0.2,
-            pointRadius: 0,
-            pointHoverRadius: 5
-          }
-        ]
+        datasets: datasets
       },
       options: {
         responsive: true,
@@ -802,8 +835,9 @@ function updatePlot() {
     'Integrated lateral flux (m²/yr)',
     data.ages,
     data.fluxDecayOnly,
-    data.fluxWithCreep,
-    (val) => `${val.toFixed(4)} m²/yr (${(val * MODEL_CONSTANTS.bulkDensity).toFixed(2)} kg/m/yr)`
+    data.fluxSpatial,
+    (val) => `${val.toFixed(4)} m²/yr (${(val * MODEL_CONSTANTS.bulkDensity).toFixed(2)} kg/m/yr)`,
+    data.fluxHistoricalCohort
   );
 }
 
@@ -857,9 +891,23 @@ Both profile choices assume that lateral creep is restricted to an active upper 
 - **Linear shear-zone profile:** speed is maximum at the surface and decreases linearly to zero at depth $H_{\text{shear}}$. Below this depth, the peat is stable.
 
 #### **Integrated Lateral Flux**
-Integrating the lateral velocity profile $u(z)$ over the entire depth of the peat column $H$ gives the integrated lateral volume flux $Q$ (in $\mathrm{m^2\,yr^{-1}}$):
+Integrating the lateral velocity profile $u(z)$ over the depth of the peat column gives the integrated lateral volume flux $Q$ (in $\mathrm{m^2\,yr^{-1}}$):
 
 $$Q = \int_0^H u(z) \, dz$$
+
+We can analyze this integral in two distinct ways:
+
+1. **Spatial Cumulative Flux (Present Day):**
+   * **Mathematics:** This is an indefinite integral over depth $z$ evaluated at the final present time ($t = T_{\text{final}}$):
+     $$Q_{\text{spatial}}(z) = \int_0^z u(T_{\text{final}}, s) \, ds \qquad \text{for } z \in [0, H_{\text{final}}]$$
+     where $z = H(a)$ is the depth of the cohort of age $a$ today. 
+   * **Physics:** It answers: *"In the modern peat column today, how much lateral creep flux is carried by the upper layers down to depth $z$?"* Because the surface ($z = 0$, cohort age 0) has a thickness of 0, this cumulative value starts at $0$ today and increases to the total column flux at the bottom of the core (age 10,000).
+
+2. **Historical Total Flux (Over Time):**
+   * **Mathematics:** This is a definite integral over the entire peat thickness $H(t)$ at varying historical times $t \in [0, T_{\text{final}}]$:
+     $$Q_{\text{historical}}(t) = \int_0^{H(t)} u(t, z) \, dz$$
+     where $t = T_{\text{final}} - a$ is the historical time when the oldest cohort was $a$ years old.
+   * **Physics:** It answers: *"At any historical time $t$ in the bog's history, what was the total lateral creep flux integrated across the entire profile?"* Because the bog is mature today (present, age 0), this total flux is at its **maximum** today. It only drops to $0$ at the initial start of the bog 10,000 years ago (age 10,000).
 
 For the two profile types under an active layer of depth $H_{\text{active}}$ (where $u_{\text{surf}}$ is the surface speed):
 - **Uniform profile:**

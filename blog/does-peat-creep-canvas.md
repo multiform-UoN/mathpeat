@@ -517,7 +517,7 @@ function readCanvasInputs() {
   const hShear = parseFloat(shearSlider.value);
 
   const containerShear = document.getElementById('canvasContainerShearDepth');
-  containerShear.style.display = 'block'; // Always display as both plug and shear profiles now have an active layer limit
+  containerShear.style.display = 'block'; 
 
   const labelActiveDepth = document.getElementById('canvasLabelShearDepth');
   const descActiveDepth = document.getElementById('canvasDescShearDepth');
@@ -575,7 +575,9 @@ function solveCanvasODE(params) {
   const massDecayOnly = [];
   const massWithCreep = [];
   const fluxDecayOnly = new Array(CANVAS_MODEL_CONSTANTS.steps + 1).fill(0);
-  const fluxWithCreep = [];
+  const fluxSpatial = [];
+  const fluxHistoricalCohort = [];
+  const fluxHistorical = [];
   let M_creep = 0;
 
   const M_baseline_creep_final = (A_kg_creep / alpha_creep) * (1 - Math.exp(-alpha_creep * CANVAS_MODEL_CONSTANTS.years));
@@ -587,7 +589,7 @@ function solveCanvasODE(params) {
     M_creep = 0;
     massWithCreep.length = 0;
     depthWithCreep.length = 0;
-    fluxWithCreep.length = 0;
+    fluxHistorical.length = 0;
     ages.length = 0;
     massDecayOnly.length = 0;
     depthDecayOnly.length = 0;
@@ -610,7 +612,7 @@ function solveCanvasODE(params) {
       if (i === 0) {
         massWithCreep.push(0);
         depthWithCreep.push(0);
-        fluxWithCreep.push(0);
+        fluxHistorical.push(0);
       } else {
         const currentH = Math.max(0, M_creep / CANVAS_MODEL_CONSTANTS.bulkDensity);
         const H_ref = Math.max(H_min, H_final_est);
@@ -623,7 +625,7 @@ function solveCanvasODE(params) {
           currentSurfaceSpeed = uRefMYr * H_ref / Math.max(currentH, H_min);
         }
         
-        const flux = getIntegratedFlux(currentH, currentSurfaceSpeed, profileType, hShear);
+        const fluxHist = getIntegratedFlux(currentH, currentSurfaceSpeed, profileType, hShear);
 
         const f = (m) => {
           const H = Math.max(0, m / CANVAS_MODEL_CONSTANTS.bulkDensity);
@@ -652,10 +654,19 @@ function solveCanvasODE(params) {
 
         massWithCreep.push(M_creep);
         depthWithCreep.push(M_creep / CANVAS_MODEL_CONSTANTS.bulkDensity);
-        fluxWithCreep.push(flux);
+        fluxHistorical.push(fluxHist);
       }
     }
     H_final_est = Math.max(H_min, M_creep / CANVAS_MODEL_CONSTANTS.bulkDensity);
+  }
+
+  for (let i = 0; i <= CANVAS_MODEL_CONSTANTS.steps; i++) {
+    const H_cohort = depthWithCreep[i];
+    const fSpatial = getIntegratedFlux(H_cohort, uRefMYr, profileType, hShear);
+    fluxSpatial.push(fSpatial);
+
+    const fHist = fluxHistorical[CANVAS_MODEL_CONSTANTS.steps - i];
+    fluxHistoricalCohort.push(fHist);
   }
 
   const profileLabel = profileType === 'uniform' ? `uniform to ${hShear.toFixed(1)} m` : `linear to ${hShear.toFixed(1)} m`;
@@ -667,29 +678,10 @@ function solveCanvasODE(params) {
   };
   const derivedCoeffStr = `${profileLabel}; ${scalingLabels[scalingType]}`;
 
-  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, fluxDecayOnly, fluxWithCreep, derivedCoeffStr };
+  return { ages, depthDecayOnly, depthWithCreep, massDecayOnly, massWithCreep, fluxDecayOnly, fluxSpatial, fluxHistoricalCohort, derivedCoeffStr };
 }
 
-function drawSeries(ctx, data, plot, colour, dashed) {
-  ctx.save();
-  ctx.strokeStyle = colour;
-  ctx.lineWidth = 3;
-  ctx.setLineDash(dashed ? [8, 6] : []);
-  ctx.beginPath();
-  data.ages.forEach((age, index) => {
-    const x = plot.left + plot.width - (age / CANVAS_MODEL_CONSTANTS.years) * plot.width;
-    const y = plot.top + (1.0 - data.series[index] / plot.maxY) * plot.height;
-    if (index === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-  });
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep, ages) {
+function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep, ages, seriesCreepHist = null) {
   const canvas = document.getElementById(canvasId);
   const wrapper = canvas.parentElement;
   const ratio = window.devicePixelRatio || 1;
@@ -704,11 +696,12 @@ function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep,
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
 
-  const maxY = Math.max(...seriesBaseline, ...seriesCreep) * 1.08;
+  const maxValToScan = seriesCreepHist ? Math.max(...seriesBaseline, ...seriesCreep, ...seriesCreepHist) : Math.max(...seriesBaseline, ...seriesCreep);
+  const maxY = maxValToScan * 1.08;
   const plot = {
     left: 65,
     right: 20,
-    top: 25,
+    top: 35,
     bottom: 55
   };
   plot.width = cssWidth - plot.left - plot.right;
@@ -729,8 +722,6 @@ function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep,
 
   for (let i = 0; i <= 5; i++) {
     const frac = i / 5;
-    // For depth and mass, y decreases downwards (0 is at top, max is at bottom)
-    // For flux, standard orientation (0 is at bottom, max is at top)
     const y = isFlux ? (plot.top + (1 - frac) * plot.height) : (plot.top + frac * plot.height);
     const val = frac * plot.maxY;
     ctx.beginPath();
@@ -739,15 +730,10 @@ function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep,
     ctx.stroke();
 
     let labelVal;
-    if (plot.maxY >= 100) {
-      labelVal = val.toFixed(0);
-    } else if (plot.maxY >= 1) {
-      labelVal = val.toFixed(1);
-    } else if (plot.maxY >= 0.1) {
-      labelVal = val.toFixed(2);
-    } else {
-      labelVal = val.toFixed(4);
-    }
+    if (plot.maxY >= 100) labelVal = val.toFixed(0);
+    else if (plot.maxY >= 1) labelVal = val.toFixed(1);
+    else if (plot.maxY >= 0.1) labelVal = val.toFixed(2);
+    else labelVal = val.toFixed(4);
     ctx.fillText(labelVal, plot.left - 8, y);
   }
 
@@ -771,24 +757,16 @@ function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep,
   ctx.lineTo(plot.left + plot.width, plot.top + plot.height);
   ctx.stroke();
 
-  // If flux, we draw normally (0 is at bottom). For others, we invert series values.
-  const drawDataBaseline = isFlux ? seriesBaseline : seriesBaseline;
-  const drawDataCreep = isFlux ? seriesCreep : seriesCreep;
-  
-  // Note: drawSeries needs to correctly orient values based on isFlux
   ctx.save();
   ctx.strokeStyle = '#157878';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ages.forEach((age, index) => {
     const x = plot.left + plot.width - (age / CANVAS_MODEL_CONSTANTS.years) * plot.width;
-    const valRatio = drawDataBaseline[index] / plot.maxY;
+    const valRatio = seriesBaseline[index] / plot.maxY;
     const y = isFlux ? (plot.top + (1.0 - valRatio) * plot.height) : (plot.top + valRatio * plot.height);
-    if (index === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   });
   ctx.stroke();
   ctx.restore();
@@ -796,20 +774,34 @@ function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep,
   ctx.save();
   ctx.strokeStyle = '#d9534f';
   ctx.lineWidth = 3;
-  ctx.setLineDash([8, 6]);
+  ctx.setLineDash([6, 4]);
   ctx.beginPath();
   ages.forEach((age, index) => {
     const x = plot.left + plot.width - (age / CANVAS_MODEL_CONSTANTS.years) * plot.width;
-    const valRatio = drawDataCreep[index] / plot.maxY;
+    const valRatio = seriesCreep[index] / plot.maxY;
     const y = isFlux ? (plot.top + (1.0 - valRatio) * plot.height) : (plot.top + valRatio * plot.height);
-    if (index === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   });
   ctx.stroke();
   ctx.restore();
+
+  if (isFlux && seriesCreepHist) {
+    ctx.save();
+    ctx.strokeStyle = '#f0ad4e';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ages.forEach((age, index) => {
+      const x = plot.left + plot.width - (age / CANVAS_MODEL_CONSTANTS.years) * plot.width;
+      const valRatio = seriesCreepHist[index] / plot.maxY;
+      const y = plot.top + (1.0 - valRatio) * plot.height;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.restore();
+  }
 
   ctx.fillStyle = '#24292e';
   ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
@@ -824,18 +816,36 @@ function drawSingleCanvasPlot(canvasId, yAxisLabel, seriesBaseline, seriesCreep,
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
+  
   ctx.fillStyle = '#157878';
-  ctx.fillRect(plot.left + 10, plot.top + 10, 20, 3);
+  ctx.fillRect(plot.left + 10, plot.top - 20, 15, 3);
   ctx.fillStyle = '#24292e';
-  ctx.fillText('Clymo/Yu model', plot.left + 35, plot.top + 11);
+  ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+  ctx.fillText('Clymo/Yu model', plot.left + 30, plot.top - 19);
+
   ctx.strokeStyle = '#d9534f';
-  ctx.setLineDash([8, 6]);
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([5, 3]);
   ctx.beginPath();
-  ctx.moveTo(plot.left + 115, plot.top + 11);
-  ctx.lineTo(plot.left + 135, plot.top + 11);
+  ctx.moveTo(plot.left + 135, plot.top - 19);
+  ctx.lineTo(plot.left + 150, plot.top - 19);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillText('Creep model', plot.left + 142, plot.top + 11);
+  ctx.fillStyle = '#24292e';
+  ctx.fillText(isFlux ? 'Spatial Cumulative Flux (Present Day)' : 'Creep model', plot.left + 157, plot.top - 19);
+
+  if (isFlux) {
+    ctx.strokeStyle = '#f0ad4e';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([1.5, 2]);
+    ctx.beginPath();
+    ctx.moveTo(plot.left + 10, plot.top - 8);
+    ctx.lineTo(plot.left + 25, plot.top - 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#24292e';
+    ctx.fillText('Historical Total Flux (Over Time)', plot.left + 30, plot.top - 7);
+  }
 }
 
 function updateCanvasPlot() {
@@ -854,7 +864,7 @@ function updateCanvasPlot() {
 
   drawSingleCanvasPlot('peatDepthCanvas', 'Estimated depth (m)', data.depthDecayOnly, data.depthWithCreep, data.ages);
   drawSingleCanvasPlot('peatMassCanvas', 'Cumulative mass (kg/m²)', data.massDecayOnly, data.massWithCreep, data.ages);
-  drawSingleCanvasPlot('peatFluxCanvas', 'Integrated lateral flux (m²/yr)', data.fluxDecayOnly, data.fluxWithCreep, data.ages);
+  drawSingleCanvasPlot('peatFluxCanvas', 'Integrated lateral flux (m²/yr)', data.fluxDecayOnly, data.fluxSpatial, data.ages, data.fluxHistoricalCohort);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -867,7 +877,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCanvasPlot();
 });
 </script>
-{% endraw %}
 
 ---
 
@@ -908,9 +917,23 @@ Both profile choices assume that lateral creep is restricted to an active upper 
 - **Linear shear-zone profile:** speed is maximum at the surface and decreases linearly to zero at depth $H_{\text{shear}}$. Below this depth, the peat is stable.
 
 #### **Integrated Lateral Flux**
-Integrating the lateral velocity profile $u(z)$ over the entire depth of the peat column $H$ gives the integrated lateral volume flux $Q$ (in $\mathrm{m^2\,yr^{-1}}$):
+Integrating the lateral velocity profile $u(z)$ over the depth of the peat column gives the integrated lateral volume flux $Q$ (in $\mathrm{m^2\,yr^{-1}}$):
 
 $$Q = \int_0^H u(z) \, dz$$
+
+We can analyze this integral in two distinct ways:
+
+1. **Spatial Cumulative Flux (Present Day):**
+   * **Mathematics:** This is an indefinite integral over depth $z$ evaluated at the final present time ($t = T_{\text{final}}$):
+     $$Q_{\text{spatial}}(z) = \int_0^z u(T_{\text{final}}, s) \, ds \qquad \text{for } z \in [0, H_{\text{final}}]$$
+     where $z = H(a)$ is the depth of the cohort of age $a$ today. 
+   * **Physics:** It answers: *"In the modern peat column today, how much lateral creep flux is carried by the upper layers down to depth $z$?"* Because the surface ($z = 0$, cohort age 0) has a thickness of 0, this cumulative value starts at $0$ today and increases to the total column flux at the bottom of the core (age 10,000).
+
+2. **Historical Total Flux (Over Time):**
+   * **Mathematics:** This is a definite integral over the entire peat thickness $H(t)$ at varying historical times $t \in [0, T_{\text{final}}]$:
+     $$Q_{\text{historical}}(t) = \int_0^{H(t)} u(t, z) \, dz$$
+     where $t = T_{\text{final}} - a$ is the historical time when the oldest cohort was $a$ years old.
+   * **Physics:** It answers: *"At any historical time $t$ in the bog's history, what was the total lateral creep flux integrated across the entire profile?"* Because the bog is mature today (present, age 0), this total flux is at its **maximum** today. It only drops to $0$ at the initial start of the bog 10,000 years ago (age 10,000).
 
 For the two profile types under an active layer of depth $H_{\text{active}}$ (where $u_{\text{surf}}$ is the surface speed):
 - **Uniform profile:**
